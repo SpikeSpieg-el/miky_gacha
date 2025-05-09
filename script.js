@@ -822,27 +822,110 @@ function showHome() {
   async function getRandomDanbooruImage() {
     const tags = "hatsune_miku";
     const url = `https://danbooru.donmai.us/posts.json?tags=${encodeURIComponent(tags)}&limit=100`;
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.length > 0) {
-      // Перемешиваем массив данных, чтобы случайно выбирать изображения
-      const shuffledData = data.sort(() => Math.random() - 0.5);
-      for (const post of shuffledData) {
-        if (post.file_url) {
-          // Проверяем, доступно ли изображение
-          try {
-            const imgResponse = await fetch(post.file_url);
-            if (imgResponse.ok) {
-              return post.file_url;
+
+    // Создаем элемент для отображения загрузки
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'loading-indicator';
+    loadingIndicator.style.position = 'fixed';
+    loadingIndicator.style.top = '50%';
+    loadingIndicator.style.left = '50%';
+    loadingIndicator.style.transform = 'translate(-50%, -50%)';
+    loadingIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    loadingIndicator.style.color = '#fff';
+    loadingIndicator.style.padding = '10px 20px';
+    loadingIndicator.style.borderRadius = '5px';
+    loadingIndicator.style.zIndex = '1000';
+    loadingIndicator.textContent = 'Загрузка...';
+    document.body.appendChild(loadingIndicator);
+
+    // Создаем тайм-аут на 3 секунды
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out')), 3000);
+    });
+
+    try {
+      // Используем Promise.race для соревнования между запросом и тайм-аутом
+      const response = await Promise.race([
+        fetch(url),
+        timeoutPromise
+      ]);
+
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+
+      if (data.length > 0) {
+        const shuffledData = data.sort(() => Math.random() - 0.5);
+        for (const post of shuffledData) {
+          if (post.file_url) {
+            try {
+              const imgResponse = await fetch(post.file_url);
+              if (imgResponse.ok) {
+                // Убираем индикатор загрузки перед возвратом результата
+                document.body.removeChild(loadingIndicator);
+                return post.file_url;
+              }
+            } catch (error) {
+              console.error("Ошибка загрузки изображения:", error);
             }
-          } catch (error) {
-            console.error("Ошибка загрузки изображения:", error);
           }
         }
       }
+    } catch (error) {
+      console.error("Ошибка при запросе к Danbooru API:", error);
+    } finally {
+      // Убираем индикатор загрузки в любом случае
+      if (document.body.contains(loadingIndicator)) {
+        document.body.removeChild(loadingIndicator);
+      }
     }
-    // Если ни одно изображение не загрузилось, возвращаем запасное изображение
-    return "https://danbooru.donmai.us/data/sample/__hatsune_miku_vocaloid_drawn_by_tns_k__sample-c0df9bb90e9b91a9621175d188019021.jpg";
+
+    // Если запрос не удался или превышен тайм-аут, используем локальные изображения
+    const localImages = [
+      'img_card_game/miku (1).jpg',
+      'img_card_game/miku (2).jpg',
+      'img_card_game/miku (3).jpg',
+      'img_card_game/miku (4).jpg',
+      'img_card_game/miku (5).jpg',
+      'img_card_game/miku (6).jpg',
+      'img_card_game/miku (1).png',
+      'img_card_game/miku (2).png',
+      'img_card_game/miku (3).png',
+      'img_card_game/miku (4).png',
+      'img_card_game/miku (5).png',
+      'img_card_game/miku (6).png',
+      'img_card_game/miku (7).png',
+      'img_card_game/miku (8).png',
+      'img_card_game/miku (9).png',
+      'img_card_game/miku (10).png',
+      'img_card_game/miku (11).png',
+      'img_card_game/miku (12).png',
+      'img_card_game/miku (13).png',
+      'img_card_game/miku (14).png',
+      'img_card_game/miku (15).png',
+      'img_card_game/miku (16).png',
+      'img_card_game/miku (17).png',
+      'img_card_game/miku (18).png',
+      'img_card_game/miku (19).png',
+      'img_card_game/miku (20).png',
+      'img_card_game/miku (21).png',
+      'img_card_game/miku (22).png',
+      'img_card_game/miku (23).png',
+      'img_card_game/miku (24).png',
+      'img_card_game/miku (25).png',
+      'img_card_game/miku (26).png',
+      'img_card_game/miku (27).png',
+      'img_card_game/miku (28).png',
+      'img_card_game/miku (29).png',
+      'img_card_game/miku (30).png',
+      'img_card_game/miku (31).png',
+      'img_card_game/miku (32).png',
+      'img_card_game/miku (33).png',
+      'img_card_game/miku (34).png',
+      'img_card_game/miku (35).png'
+    ];
+
+    // Возвращаем случайное изображение из локальной папки
+    return localImages[Math.floor(Math.random() * localImages.length)];
   }
 
   // Функция для генерации уникального имени на основе URL изображения
