@@ -996,8 +996,8 @@ function showHome() {
       // Генерируем уникальное имя на основе URL изображения
       const uniqueName = generateUniqueName(imgUrl);
 
-      // Генерируем редкость от 1 до 6
-      const rarity = Math.floor(Math.random() * 6) + 1;
+      // Генерация редкости с учетом вероятности
+      const rarity = getRandomRarity();
 
       // Ограничиваем характеристики в зависимости от редкости
       const maxStat = rarity * 20; // Максимальное значение характеристики = редкость * 20
@@ -1020,7 +1020,6 @@ function showHome() {
       collection.push(char);
       
       // Обновляем список уникальных карт
-      // Используем URL изображения как уникальный идентификатор карты
       if (!uniqueCards[imgUrl]) {
         uniqueCards[imgUrl] = char;
         // Обновляем счетчик коллекции при получении новой уникальной карты
@@ -1081,6 +1080,25 @@ function showHome() {
     updateTycoonStats();
     updateCollection();
     updateCollectionCounter();
+  }
+
+  // Функция для генерации редкости с учетом вероятности
+  function getRandomRarity() {
+    const random = Math.random() * 100; // Генерируем случайное число от 0 до 100
+
+    if (random < 0.1) {
+      return 6; // 6 звезд с вероятностью 0.1%
+    } else if (random < 1) {
+      return 5; // 5 звезд с вероятностью 0.9%
+    } else if (random < 5) {
+      return 4; // 4 звезды с вероятностью 4%
+    } else if (random < 15) {
+      return 3; // 3 звезды с вероятностью 10%
+    } else if (random < 40) {
+      return 2; // 2 звезды с вероятностью 25%
+    } else {
+      return 1; // 1 звезда с вероятностью 60%
+    }
   }
 
   function updateCollection() {
