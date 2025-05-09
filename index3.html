@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hatsune Miku Tycoon Gacha</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Мерцающие звезды для фона -->
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+
+  <!-- Новый хедер с лого -->
+  <header class="fixed-top bg-dark bg-opacity-75 py-2">
+    <div class="container-fluid">
+      <div class="d-flex justify-content-between align-items-center">
+        <a href="#" onclick="showHome()" class="text-decoration-none">
+          <div class="d-flex align-items-center">
+            <img src="1logo.png" alt="Logo" class="header-logo me-2" style="height: 40px;">
+            <h1 class="header-title m-0" style="color: var(--accent-color); font-size: 1.5rem;">Miku Gacha</h1>
+          </div>
+        </a>
+        <button class="menu-button" onclick="toggleMenu()">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+  
+  <div class="container py-4">
+    <!-- Основное содержимое главной страницы -->
+    <div id="homeContent" class="mb-5">
+      <div class="site-header-container d-flex align-items-center">
+      <div class="site-header text-md-start text-center">
+        <h1 class="site-title">Hatsune Miku</h1>
+        <h2 class="site-subtitle">Tycoon Gacha</h2>
+        <p class="site-description">Collect cards and play tycoon!</p>
+        <div class="text-center text-md-start">
+          <button class="play-button" onclick="showGachaSystem()">PLAY NOW</button>
+        </div>
+        </div>
+        <!--<img src="" alt="Hatsune Miku Screen" class="header-image">-->
+    </div>
+
+      <div class="row mt-5">
+        <div class="col-md-6">
+          <div class="feature-box">
+            <h3 class="feature-title">CARD COLLECTION</h3>
+            <div class="card-collection-box">
+              <div class="card-thumbnail"><img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Miku"></div>
+              <div class="card-thumbnail"><img src="мику_картинки/0361f24ce641bd47ebe323b33d627725.webp" alt="Snow Miku"></div>
+              <div class="card-thumbnail"><img src="мику_картинки/640b28cf1793694f9251afe6e1a43736.webp" alt="Future Miku"></div>
+              <div class="card-thumbnail"><img src="мику_картинки/08402f4a15ae284a450e5f5f263cd443.webp" alt="Miku Angel"></div>
+              <div class="card-thumbnail"><img src="мику_картинки/a0f5fa7c8929d2572041c1740f285ff7.webp" alt="Miku Star"></div>
+            </div>
+            <p class="card-count mb-4">124/200</p>
+            <button class="feature-button" onclick="showCollection()">CARD COLLECTION</button>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="feature-box">
+                <h3 class="feature-title">NEWS</h3>
+                <div class="news-item">
+                  <p>Lorem ipsum dolor sit amet</p>
+                  <p class="news-date">APR 22, 2024</p>
+                  <div class="dots-indicator">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                  </div>
+                </div>
+                <div class="news-item">
+                  <p>Lorem ipsum dolor sit amet</p>
+                  <p class="news-date">APR 22, 2024</p>
+                  <div class="dots-indicator">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                  </div>
+                </div>
+                <button class="feature-button mt-2" onclick="showNews()">NEWS</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Добавляем новый блок для тайкун-режима здесь -->
+          <div class="row mt-3">
+            <div class="col-md-12">
+              <div class="feature-box">
+                <h3 class="feature-title">TYCOON STUDIO</h3>
+                <p>Manage your own idol studio, create songs and perform concerts!</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                  <div>
+                    <i class="fas fa-users me-2" style="color: var(--accent-color);"></i> <span id="homeTotalFans">0</span> Fans
+                  </div>
+                  <div>
+                    <i class="fas fa-music me-2" style="color: var(--accent-color);"></i> <span id="homeSongCount">0</span> Songs
+                  </div>
+                </div>
+                <button class="feature-button mt-3" onclick="showTycoon()">TYCOON MODE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12 mb-4">
+            <div class="feature-box text-center">
+              <img src="1_screen.png" alt="Gacha Machine" class="gacha-machine">
+              <button class="feature-button mt-3" onclick="showGachaSystem()">GACHA!</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Боковое меню (изначально скрыто) -->
+    <div id="sideMenu">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0">Menu</h4>
+        <button class="btn-close btn-close-white" onclick="toggleMenu()"></button>
+      </div>
+      <div class="nav flex-column">
+        <button class="nav-link" onclick="showHome(); toggleMenu();">Home</button>
+        <button class="nav-link" onclick="showGachaSystem(); toggleMenu();">Gacha</button>
+        <button class="nav-link" onclick="showCollection(); toggleMenu();">Collection</button>
+        <button class="nav-link" onclick="showTycoon(); toggleMenu();">Tycoon</button>
+        <button class="nav-link" onclick="showNews(); toggleMenu();">News</button>
+        <button class="nav-link" onclick="showShop(); toggleMenu();">Shop</button>
+        <button class="nav-link" onclick="showEvents(); toggleMenu();">Events</button>
+        <button class="nav-link" onclick="showProfile(); toggleMenu();">Profile</button>
+      </div>
+    </div>
+    
+    <!-- Гача система (изначально скрыта) -->
+    <div id="gachaSystem" style="display: none;">
+      <h1>🎤 Hatsune Miku Tycoon Gacha</h1>
+        <div class="text-center mb-3">
+          <button class="btn btn-primary" onclick="pullGacha(1)">Pull x1 (10💎)</button>
+          <button class="btn btn-success" onclick="pullGacha(10)">Pull x10 (100💎)</button>
+        </div>
+      <div class="text-center mb-3">
+        <button class="btn btn-secondary" onclick="showCollection()">Go to Collection</button>
+      </div>
+        <div id="gachaResults" class="row justify-content-center g-3"></div>
+    </div>
+    
+    <!-- Коллекция карточек (изначально скрыта) -->
+    <div id="cardCollection" style="display: none;">
+      <h2>Your Collection</h2>
+        <div class="text-center mb-3">
+          <label for="sortType" class="form-label">Сортировать по:</label>
+          <div class="input-group justify-content-center">
+            <select id="sortType" class="form-select w-auto" onchange="updateCollection()">
+              <option value="none">Без сортировки</option>
+              <option value="rarity">Редкость</option>
+              <option value="power">Сила</option>
+              <option value="beauty">Красота</option>
+              <option value="charisma">Харизма</option>
+              <option value="vocal">Вокал</option>
+            </select>
+            <button class="btn btn-outline-secondary" type="button" onclick="updateCollection()">
+              <i class="fas fa-sort"></i>
+            </button>
+          </div>
+        </div>
+      <div class="text-center mb-3">
+        <button class="btn btn-secondary" onclick="showGachaSystem()">Go to Gacha</button>
+        </div>
+        <ul class="nav nav-tabs" id="collectionTabs">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#all">All</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#miku">Miku</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#event">Event</a></li>
+        </ul>
+        <div class="tab-content p-3 bg-dark rounded">
+          <div class="tab-pane fade show active" id="all"></div>
+          <div class="tab-pane fade" id="miku"></div>
+          <div class="tab-pane fade" id="event"></div>
+      </div>
+        </div>
+
+    <!-- Тайкун режим (изначально скрыт) -->
+    <div id="tycoonMode" style="display: none;">
+      <h2 class="mb-4">Miku Tycoon Studio</h2>
+      
+      <!-- Основная информация о студии -->
+      <div class="row mb-4">
+        <div class="col-md-7">
+          <div class="feature-box">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="feature-title mb-0">Your Studio</h3>
+              <div>
+                <span class="badge bg-primary px-3 py-2">Level <span id="studioLevel">1</span></span>
+                <span class="badge bg-success px-3 py-2">Rank <span id="studioRank">D</span></span>
+            </div>
+            </div>
+            
+            <div class="progress mb-2" style="height: 25px;">
+              <div class="progress-bar bg-info" role="progressbar" id="studioExpBar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <span id="studioExpText">Exp: 250/1000</span>
+          </div>
+        </div>
+        
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="fas fa-gem me-2" style="color: var(--accent-color);"></i>
+                  <div class="flex-grow-1">
+                    <p class="mb-0">Gems: <span id="totalGems">1000</span>💎</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="fas fa-users me-2" style="color: var(--accent-color);"></i>
+                  <div class="flex-grow-1">
+                    <p class="mb-0">Fans: <span id="totalFans">0</span></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="fas fa-dollar-sign me-2" style="color: var(--accent-color);"></i>
+                  <div class="flex-grow-1">
+                    <p class="mb-0">Income: <span id="studioIncome">100</span>💎/day</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="fas fa-music me-2" style="color: var(--accent-color);"></i>
+                  <div class="flex-grow-1">
+                    <p class="mb-0">Concerts: <span id="totalConcerts">0</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mt-3">
+              <div class="col-12">
+                <button class="feature-button" onclick="upgradeStudio()">
+                  <i class="fas fa-arrow-up me-2"></i> Upgrade Studio (500💎)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-5">
+          <div class="feature-box h-100 d-flex flex-column">
+            <h3 class="feature-title">Daily Tasks</h3>
+            
+            <div class="mb-auto">
+              <div class="d-flex align-items-center mb-3">
+                <div class="form-check me-3">
+                  <input class="form-check-input" type="checkbox" value="" id="task1">
+                </div>
+                <div>
+                  <p class="mb-0">Complete 1 Concert</p>
+                  <small class="text-muted">Reward: 50💎</small>
+                </div>
+              </div>
+              
+              <div class="d-flex align-items-center mb-3">
+                <div class="form-check me-3">
+                  <input class="form-check-input" type="checkbox" value="" id="task2">
+                </div>
+                <div>
+                  <p class="mb-0">Compose 1 New Song</p>
+                  <small class="text-muted">Reward: 100💎</small>
+                </div>
+              </div>
+              
+              <div class="d-flex align-items-center">
+                <div class="form-check me-3">
+                  <input class="form-check-input" type="checkbox" value="" id="task3">
+                </div>
+                <div>
+                  <p class="mb-0">Gain 100 New Fans</p>
+                  <small class="text-muted">Reward: 100💎 + 1 Gacha Ticket</small>
+                </div>
+              </div>
+            </div>
+            
+            <button class="feature-button mt-3" onclick="collectDailyTasks()">
+              <i class="fas fa-check-circle me-2"></i> Collect Rewards
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Управления командой, песни и концерты -->
+      <div class="row">
+        <!-- Управление командой -->
+        <div class="col-md-4 mb-4">
+          <div class="feature-box h-100 d-flex flex-column">
+            <h3 class="feature-title">Your Team</h3>
+            
+            <div class="mb-3">
+              <p>Staff: <span id="currentStaff">0</span>/<span id="maxStaff">5</span></p>
+              <div class="card-collection-box mb-3" id="teamMembers">
+                <!-- Здесь будут слоты для карточек персонала -->
+                <div class="card-thumbnail position-relative empty-slot">
+                  <div class="position-absolute top-50 start-50 translate-middle text-center">
+                    <i class="fas fa-plus" style="font-size: 24px; color: rgba(255, 255, 255, 0.5);"></i>
+                  </div>
+                </div>
+                <div class="card-thumbnail position-relative empty-slot">
+                  <div class="position-absolute top-50 start-50 translate-middle text-center">
+                    <i class="fas fa-plus" style="font-size: 24px; color: rgba(255, 255, 255, 0.5);"></i>
+                  </div>
+                </div>
+                <div class="card-thumbnail position-relative empty-slot">
+                  <div class="position-absolute top-50 start-50 translate-middle text-center">
+                    <i class="fas fa-plus" style="font-size: 24px; color: rgba(255, 255, 255, 0.5);"></i>
+            </div>
+          </div>
+        </div>
+        
+              <p class="mb-0">Team Bonuses:</p>
+              <ul class="text-muted">
+                <li>Fan Gain: <span id="fanBonus">+0%</span></li>
+                <li>Song Quality: <span id="songBonus">+0%</span></li>
+                <li>Performance: <span id="perfBonus">+0%</span></li>
+              </ul>
+            </div>
+            
+            <button class="feature-button mt-auto" onclick="showTeamManagement()">
+              <i class="fas fa-users me-2"></i> Manage Team
+            </button>
+          </div>
+        </div>
+        
+        <!-- Создание песен -->
+        <div class="col-md-4 mb-4">
+          <div class="feature-box h-100 d-flex flex-column">
+            <h3 class="feature-title">Song Production</h3>
+            
+            <div class="mb-3">
+              <p>Create songs to perform at concerts!</p>
+              
+              <div class="mb-3">
+                <p class="mb-1">Current Songs: <span id="songCount">0</span></p>
+                <div class="song-list mb-3" id="songList">
+                  <!-- Здесь будут созданные песни -->
+                  <div class="song-item d-flex align-items-center justify-content-between mb-2 p-2 bg-dark rounded">
+                    <span>Example Song (★★★)</span>
+                    <span class="badge bg-secondary">Demo</span>
+            </div>
+          </div>
+                
+                <div class="form-group mb-3">
+                  <select class="form-select" id="songType">
+                    <option value="pop">Pop Song (100💎)</option>
+                    <option value="rock">Rock Song (200💎)</option>
+                    <option value="ballad">Ballad (300💎)</option>
+                    <option value="dance">Dance Track (400💎)</option>
+                  </select>
+                </div>
+        </div>
+      </div>
+      
+            <button class="feature-button mt-auto" onclick="produceSong()">
+              <i class="fas fa-music me-2"></i> Create New Song
+            </button>
+              </div>
+              </div>
+        
+        <!-- Концерты и выступления -->
+        <div class="col-md-4 mb-4">
+          <div class="feature-box h-100 d-flex flex-column">
+            <h3 class="feature-title">Concerts</h3>
+            
+            <div class="mb-3">
+              <p>Perform concerts to gain fans and gems!</p>
+              
+              <div class="form-group mb-3">
+                <label for="concertVenue" class="form-label">Select Venue:</label>
+                <select class="form-select" id="concertVenue">
+                  <option value="small">Small Venue (Cost: 50💎, Max Fans: 100)</option>
+                  <option value="medium">Medium Venue (Cost: 200💎, Max Fans: 500)</option>
+                  <option value="large">Large Venue (Cost: 500💎, Max Fans: 2000)</option>
+                  <option value="arena" disabled>Arena (Requires Studio Level 5)</option>
+                  <option value="stadium" disabled>Stadium (Requires Studio Level 10)</option>
+                </select>
+              </div>
+              
+              <div class="form-group mb-3">
+                <label for="concertSong" class="form-label">Select Song:</label>
+                <select class="form-select" id="concertSong">
+                  <option value="default">Example Song (★★★)</option>
+                  <!-- Другие песни будут добавлены динамически -->
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="ticketPrice" class="form-label">Ticket Price: <span id="ticketPriceValue">10</span>💎</label>
+                <input type="range" class="form-range" id="ticketPrice" min="5" max="50" value="10">
+                <small class="text-muted">Higher prices may reduce attendance but increase revenue per fan</small>
+              </div>
+            </div>
+            
+            <button class="feature-button mt-auto" onclick="startConcert()">
+              <i class="fas fa-microphone-alt me-2"></i> Start Concert
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- История выступлений -->
+      <div class="row mt-2">
+        <div class="col-12">
+          <div class="feature-box">
+            <h3 class="feature-title">Recent Activities</h3>
+            
+            <div class="activity-log" id="activityLog">
+              <!-- Логи действий будут добавляться здесь -->
+              <div class="activity-item d-flex align-items-center mb-2">
+                <div class="activity-icon me-3">
+                  <i class="fas fa-music"></i>
+                </div>
+                <div class="activity-content">
+                  <p class="mb-0">Welcome to your new Studio!</p>
+                  <small class="text-muted">Start by adding team members and creating songs</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Новости (изначально скрыты) -->
+    <div id="newsSection" style="display: none;">
+      <h2 class="mb-4">News & Updates</h2>
+      
+      <div class="feature-box mb-4">
+        <h3 class="feature-title">New Event: Summer Festival</h3>
+        <p class="news-date">APR 22, 2024</p>
+        <div class="mb-3">
+          <p>Join our summer festival event and get exclusive Miku summer cards! The event will run for 2 weeks.</p>
+          <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Summer Event" class="img-fluid rounded mb-3" style="max-height: 300px;">
+          <button class="feature-button" onclick="showEvents()">Join Event</button>
+        </div>
+      </div>
+      
+      <div class="feature-box mb-4">
+        <h3 class="feature-title">System Update 1.2</h3>
+        <p class="news-date">APR 15, 2024</p>
+        <div class="mb-3">
+          <p>We've updated our gacha system with new card animations and improved drop rates!</p>
+          <ul>
+            <li>New limited edition cards added</li>
+            <li>Improved gacha animations</li>
+            <li>Fixed bugs in tycoon mode</li>
+            <li>Added new events system</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="feature-box">
+        <h3 class="feature-title">Upcoming Collaborations</h3>
+        <p class="news-date">APR 10, 2024</p>
+        <div class="mb-3">
+          <p>Stay tuned for upcoming collaborations with other popular characters!</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Магазин (изначально скрыт) -->
+    <div id="shopSection" style="display: none;">
+      <h2 class="mb-4">Shop</h2>
+      
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="feature-box text-center">
+            <h3 class="feature-title">Gems</h3>
+            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Gems" class="img-fluid mb-3" style="max-height: 150px;">
+            <div class="row mb-3">
+              <div class="col-6">
+                <button class="feature-button">100💎<br>$0.99</button>
+              </div>
+              <div class="col-6">
+                <button class="feature-button">500💎<br>$4.99</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6">
+                <button class="feature-button">1000💎<br>$9.99</button>
+              </div>
+              <div class="col-6">
+                <button class="feature-button">5000💎<br>$49.99</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+          <div class="feature-box text-center">
+            <h3 class="feature-title">Special Tickets</h3>
+            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Tickets" class="img-fluid mb-3" style="max-height: 150px;">
+            <div class="row mb-3">
+              <div class="col-6">
+                <button class="feature-button">1 Ticket<br>300💎</button>
+              </div>
+              <div class="col-6">
+                <button class="feature-button">5 Tickets<br>1400💎</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <button class="feature-button">10 Tickets<br>2500💎</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+          <div class="feature-box text-center">
+            <h3 class="feature-title">Special Packs</h3>
+            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Packs" class="img-fluid mb-3" style="max-height: 150px;">
+            <div class="row mb-3">
+              <div class="col-12">
+                <button class="feature-button">Starter Pack<br>$4.99</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <button class="feature-button">Monthly Pack<br>$9.99</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- События (изначально скрыты) -->
+    <div id="eventsSection" style="display: none;">
+      <h2 class="mb-4">Events</h2>
+      
+      <div class="feature-box mb-4">
+        <div class="row">
+          <div class="col-md-4">
+            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Summer Event" class="img-fluid rounded">
+          </div>
+          <div class="col-md-8">
+            <h3 class="feature-title">Summer Festival</h3>
+            <p class="news-date">APR 22 - MAY 6, 2024</p>
+            <p>Join our summer festival event and get exclusive Miku summer cards!</p>
+            <div class="progress mb-2">
+              <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+            </div>
+            <p>Event Points: 250/1000</p>
+            <button class="feature-button">Participate</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="feature-box mb-4">
+        <div class="row">
+          <div class="col-md-4">
+            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Daily Login" class="img-fluid rounded">
+          </div>
+          <div class="col-md-8">
+            <h3 class="feature-title">Daily Login Bonus</h3>
+            <p class="news-date">Ongoing</p>
+            <p>Log in daily to receive gems, tickets, and special items!</p>
+            <div class="d-flex justify-content-between mb-3">
+              <div class="text-center">
+                <div class="card-thumbnail mx-auto mb-2 position-relative">
+                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 1" class="img-fluid">
+                  <div class="position-absolute top-0 end-0 bg-success text-white p-1 rounded">✓</div>
+                </div>
+                <small>Day 1</small>
+              </div>
+              <div class="text-center">
+                <div class="card-thumbnail mx-auto mb-2 position-relative">
+                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 2" class="img-fluid">
+                  <div class="position-absolute top-0 end-0 bg-success text-white p-1 rounded">✓</div>
+                </div>
+                <small>Day 2</small>
+              </div>
+              <div class="text-center">
+                <div class="card-thumbnail mx-auto mb-2">
+                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 3" class="img-fluid">
+                </div>
+                <small>Day 3</small>
+              </div>
+              <div class="text-center">
+                <div class="card-thumbnail mx-auto mb-2">
+                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 4" class="img-fluid">
+                </div>
+                <small>Day 4</small>
+              </div>
+              <div class="text-center">
+                <div class="card-thumbnail mx-auto mb-2">
+                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 5" class="img-fluid">
+                </div>
+                <small>Day 5</small>
+              </div>
+            </div>
+            <button class="feature-button">Claim Today's Reward</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Профиль пользователя (изначально скрыт) -->
+    <div id="profileSection" style="display: none;">
+      <h2 class="mb-4">Profile</h2>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="feature-box text-center">
+            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Profile" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid var(--accent-color);">
+            <h3 class="feature-title">Player123</h3>
+            <p>Studio Rank: <span id="profileRank">D</span></p>
+            <p>Joined: April 1, 2024</p>
+            <button class="feature-button">Edit Profile</button>
+          </div>
+        </div>
+        
+        <div class="col-md-8">
+          <div class="feature-box">
+            <h3 class="feature-title">Stats</h3>
+            <div class="row">
+              <div class="col-md-6">
+                <p>Total Cards: <span id="profileTotalCards">10</span></p>
+                <p>Highest Rarity: <span id="profileHighestRarity">5★</span></p>
+                <p>Gems: <span id="profileGems">1000</span>💎</p>
+              </div>
+              <div class="col-md-6">
+                <p>Total Concerts: <span id="profileConcerts">5</span></p>
+                <p>Fans: <span id="profileFans">1200</span></p>
+                <p>Studio Level: <span id="profileStudioLevel">2</span></p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="feature-box mt-4">
+            <h3 class="feature-title">Achievements</h3>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <div class="card-thumbnail me-3">
+                    <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Achievement" class="img-fluid">
+                  </div>
+                  <div>
+                    <p class="mb-0">First Pull</p>
+                    <small class="text-muted">Completed your first gacha pull</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <div class="card-thumbnail me-3">
+                    <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Achievement" class="img-fluid">
+                  </div>
+                  <div>
+                    <p class="mb-0">Collector</p>
+                    <small class="text-muted">Collected 10 unique cards</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <div class="card-thumbnail me-3 position-relative" style="filter: grayscale(100%);">
+                    <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Achievement" class="img-fluid">
+                  </div>
+                  <div>
+                    <p class="mb-0">Lucky Star</p>
+                    <small class="text-muted">Pull a 6★ card</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <div class="card-thumbnail me-3 position-relative" style="filter: grayscale(100%);">
+                    <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Achievement" class="img-fluid">
+                  </div>
+                  <div>
+                    <p class="mb-0">Tycoon</p>
+                    <small class="text-muted">Reach studio rank A</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Character Detail Modal -->
+  <div class="modal fade" id="characterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Character Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-3">
+            <img id="modalImage" src="" class="img-fluid rounded" style="max-height: 300px;" alt="Character">
+          </div>
+          <h4 id="modalName" class="text-center mb-3"></h4>
+          <div class="text-center mb-3">
+            <span id="modalRarity" class="rarity"></span>
+          </div>
+          <div class="mb-3">
+            <h5>Stats</h5>
+            <div class="row">
+              <div class="col-6">
+                <small>Power: <span id="modalPower"></span></small>
+                <div class="progress stats-bar">
+                  <div id="modalPowerBar" class="stats-fill bg-danger" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="col-6">
+                <small>Beauty: <span id="modalBeauty"></span></small>
+                <div class="progress stats-bar">
+                  <div id="modalBeautyBar" class="stats-fill bg-info" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-6">
+                <small>Charisma: <span id="modalCharisma"></span></small>
+                <div class="progress stats-bar">
+                  <div id="modalCharismaBar" class="stats-fill bg-warning" style="width: 0%"></div>
+                </div>
+              </div>
+              <div class="col-6">
+                <small>Vocal: <span id="modalVocal"></span></small>
+                <div class="progress stats-bar">
+                  <div id="modalVocalBar" class="stats-fill bg-success" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h5>Description</h5>
+            <p id="modalDescription" class="text-muted"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Management Modal -->
+  <div class="modal fade" id="teamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Team Management</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4">
+              <h6>Current Team</h6>
+              <div class="team-slots" id="teamSlots">
+                <div class="team-slot mb-3 p-2 bg-dark rounded">
+                  <div class="d-flex">
+                    <div class="card-thumbnail position-relative empty-slot me-3">
+                      <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <i class="fas fa-plus" style="font-size: 24px; color: rgba(255, 255, 255, 0.5);"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="mb-0">Slot #1</p>
+                      <small class="text-muted">Empty</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="team-slot mb-3 p-2 bg-dark rounded">
+                  <div class="d-flex">
+                    <div class="card-thumbnail position-relative empty-slot me-3">
+                      <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <i class="fas fa-plus" style="font-size: 24px; color: rgba(255, 255, 255, 0.5);"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="mb-0">Slot #2</p>
+                      <small class="text-muted">Empty</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="team-slot mb-3 p-2 bg-dark rounded">
+                  <div class="d-flex">
+                    <div class="card-thumbnail position-relative empty-slot me-3">
+                      <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <i class="fas fa-plus" style="font-size: 24px; color: rgba(255, 255, 255, 0.5);"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="mb-0">Slot #3</p>
+                      <small class="text-muted">Empty</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3">
+                <h6>Team Bonus</h6>
+                <p class="mb-1">Fan Gain: <span id="modalFanBonus">+0%</span></p>
+                <p class="mb-1">Song Quality: <span id="modalSongBonus">+0%</span></p>
+                <p class="mb-1">Performance: <span id="modalPerfBonus">+0%</span></p>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <h6>Your Collection</h6>
+              <div class="card-selection" id="cardSelection">
+                <!-- Карточки будут добавлены динамически -->
+                <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" class="card-option img-fluid" alt="Character">
+                <img src="мику_картинки/0361f24ce641bd47ebe323b33d627725.webp" class="card-option img-fluid" alt="Character">
+                <img src="мику_картинки/640b28cf1793694f9251afe6e1a43736.webp" class="card-option img-fluid" alt="Character">
+                <img src="мику_картинки/08402f4a15ae284a450e5f5f263cd443.webp" class="card-option img-fluid" alt="Character">
+                <img src="мику_картинки/a0f5fa7c8929d2572041c1740f285ff7.webp" class="card-option img-fluid" alt="Character">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveTeam">Save Team</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Concert Results Modal -->
+  <div class="modal fade" id="concertResultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Concert Results</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div class="mb-4">
+            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Concert" class="img-fluid rounded mb-3" style="max-height: 200px;">
+          </div>
+          
+          <h4 id="concertVenueName">Small Venue</h4>
+          <p id="concertSongName">Song: Example Song (★★★)</p>
+          
+          <div class="concert-result">
+            <h4>Performance Results</h4>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="result-stat fans-gained">
+                  <i class="fas fa-users me-2"></i> <span id="concertFans">+100</span> Fans
+                </p>
+            </div>
+              <div class="col-md-6">
+                <p class="result-stat gems-earned">
+                  <i class="fas fa-gem me-2"></i> <span id="concertGems">+50</span> Gems
+                </p>
+          </div>
+            </div>
+            <div class="mt-3">
+              <p>Performance Rating: <span id="performanceRating">Good!</span></p>
+              <div class="d-flex justify-content-center my-2">
+                <span id="ratingStars" class="text-warning">★★★☆☆</span>
+              </div>
+              <p class="text-muted" id="performanceComment">Your performance was good! The fans enjoyed the show.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="shareConcertResult()">
+            <i class="fas fa-share-alt me-2"></i> Share
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
