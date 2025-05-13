@@ -1230,58 +1230,97 @@ function showHome() {
     let duplicates = [];
     let pulledCardsPromises = [];
 
+    // Создаем Set с УЖЕ использованными уникальными imgUrl ИЗ КОЛЛЕКЦИИ
+    // Обновляем этот Set перед каждым пуллом, чтобы он был актуален
+    const uniqueImageUrlsInCollection = new Set(
+        Object.values(uniqueCards).map(card => card.imgUrl || card.img)
+    );
+
     for (let i = 0; i < times; i++) {
-      pulledCardsPromises.push((async () => {
-          let imgUrl;
-          let rarity;
-          let attempts = 0;
-          let cardKey;
-          let power, beauty, charisma, vocal;
+        pulledCardsPromises.push((async () => {
+            let imgUrl;
+            let isUniqueImage = false;
+            let attempts = 0;
+            const maxImageAttempts = 50; // Лимит попыток найти уникальный арт
 
-          do {
-              imgUrl = await getRandomDanbooruImage();
-              if (!imgUrl) continue; 
+            // --- ЦИКЛ ПОИСКА УНИКАЛЬНОГО IMG URL --- 
+            do {
+                imgUrl = await getRandomDanbooruImage(); // Получаем путь к локальному изображению
 
-              rarity = getRandomRarity();
-              const maxStat = rarity * 20;
-              power = Math.floor(Math.random() * maxStat) + 1;
-              beauty = Math.floor(Math.random() * maxStat) + 1;
-              charisma = Math.floor(Math.random() * maxStat) + 1;
-              vocal = Math.floor(Math.random() * maxStat) + 1;
-              cardKey = generateCardKey(imgUrl, rarity, power, beauty, charisma, vocal);
+                if (!imgUrl) {
+                    // Если getRandomDanbooruImage вернул null (все картинки недоступны/использованы в сессии)
+                    attempts++;
+                    console.warn(`getRandomDanbooruImage вернул null на попытке ${attempts}`);
+                    if (attempts >= maxImageAttempts) break; // Прерываем цикл, если не можем получить URL
+                    continue; // Пробуем получить другой URL
+                }
 
-              attempts++;
-              if (attempts > 20) { 
-                  console.warn("Не удалось найти уникальный арт для выбранной редкости после 20 попыток.");
-                  return null; 
-              }
-          } while (uniqueCards[cardKey]);
+                // Проверяем, используется ли этот imgUrl в УЖЕ СОБРАННОЙ уникальной коллекции
+                if (!uniqueImageUrlsInCollection.has(imgUrl)) {
+                    isUniqueImage = true; // Нашли! Этот арт еще не использовался для уникальной карты.
+                } else {
+                    // Этот арт уже есть в uniqueCards, нужно пробовать другой
+                    attempts++;
+                    console.log(`Изображение ${imgUrl} уже есть в уникальной коллекции, попытка ${attempts}...`);
+                }
 
-          if (!imgUrl) return null; 
+            } while (!isUniqueImage && attempts < maxImageAttempts);
+            // --- КОНЕЦ ЦИКЛА ПОИСКА --- 
 
-          const uniqueName = generateUniqueName(imgUrl, rarity, power, beauty, charisma, vocal);
+            if (!isUniqueImage) {
+                console.error(`Не удалось найти уникальный URL изображения после ${maxImageAttempts} попыток.`);
+                // Можно либо вернуть null, либо попробовать использовать дубликат арта, но с другими статами?
+                // Пока просто вернем null, чтобы пропустить генерацию этой карты.
+                return null; 
+            }
 
-          const char = {
-              name: uniqueName,
-              rarity: rarity,
-              img: imgUrl, 
-              imgUrl: imgUrl,
-              type: "miku",
-              power: power,
-              beauty: beauty,
-              charisma: charisma,
-              vocal: vocal,
-              description: "A unique Miku character."
-          };
+            // Теперь, когда у нас есть УНИКАЛЬНЫЙ imgUrl, генерируем остальное
+            const rarity = getRandomRarity();
+            const maxStat = rarity * 20;
+            const power = Math.floor(Math.random() * maxStat) + 1;
+            const beauty = Math.floor(Math.random() * maxStat) + 1;
+            const charisma = Math.floor(Math.random() * maxStat) + 1;
+            const vocal = Math.floor(Math.random() * maxStat) + 1;
+            
+            // Генерируем ПОЛНЫЙ ключ карты (включая статы)
+            const cardKey = generateCardKey(imgUrl, rarity, power, beauty, charisma, vocal);
 
-          collection.push(char);
-          if (!uniqueCards[cardKey]) {
-              uniqueCards[cardKey] = char;
-          } else {
-              duplicates.push(char);
-          }
-          return char; 
-      })());
+            // Финальная проверка на ОЧЕНЬ маловероятную коллизию полного ключа
+            if (uniqueCards[cardKey]) {
+                 console.warn(`Полная коллизия ключа для ${cardKey} (арт ${imgUrl}), пропускаем.`);
+                 // Теоретически, мы могли бы здесь перегенерировать только статы, 
+                 // но для простоты пропустим эту карту.
+                 return null;
+            }
+
+            const uniqueName = generateUniqueName(imgUrl, rarity, power, beauty, charisma, vocal);
+
+            const char = {
+                name: uniqueName,
+                rarity: rarity,
+                img: imgUrl, 
+                imgUrl: imgUrl,
+                type: "miku",
+                power: power,
+                beauty: beauty,
+                charisma: charisma,
+                vocal: vocal,
+                description: "A unique Miku character."
+            };
+
+            // Добавляем в общую коллекцию (включая дубликаты)
+            collection.push(char);
+            
+            // Добавляем в УНИКАЛЬНУЮ коллекцию и трекер уникальных URL
+            // Эта проверка теперь почти избыточна после проверки выше, но оставим для надежности
+            if (!uniqueCards[cardKey]) {
+                uniqueCards[cardKey] = char;
+                uniqueImageUrlsInCollection.add(imgUrl); // <-- ВАЖНО: Обновляем Set использованных URL
+            } else {
+                duplicates.push(char);
+            }
+            return char; 
+        })());
     }
 
     const results = await Promise.all(pulledCardsPromises);
