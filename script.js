@@ -124,7 +124,7 @@ function showHome() {
   let concertResultModalInstance = null;
 
   // Глобальные переменные для отслеживания выбранных элементов
-  let selectedCardIndex = -1;
+  let selectedCardData = null; // Заменяем selectedCardIndex
   let selectedSlotIndex = -1;
 
   // Инициализация тайкун-системы
@@ -283,7 +283,7 @@ function showHome() {
   // Функция для показа модального окна управления командой
   function showTeamManagement() {
     // Сбрасываем выбранные элементы
-    selectedCardIndex = -1;
+    selectedCardData = null;
     selectedSlotIndex = -1;
     
     // Обновляем содержимое модального окна
@@ -312,37 +312,35 @@ function showHome() {
     cardSelection.innerHTML = '';
     
     // Получаем список карточек из коллекции
-    let availableCards = [...collection];
+    let availableCards = [...collection].filter(card => 
+        !currentTeam.some(member => 
+            (member.id && member.id === card.id) || 
+            (member.img && member.img === card.img) || 
+            (member.imgUrl && member.imgUrl === (card.imgUrl || card.img))
+        )
+    );
     
-    // Сортировка карточек - безопасное получение значения
+    // Сортировка карточек
     const cardFilterElement = document.getElementById('cardFilter');
     const sortType = cardFilterElement ? cardFilterElement.value : 'all';
     
     if (sortType !== 'all') {
-      availableCards.sort((a, b) => {
-        if (sortType === 'rarity') {
-          return b.rarity - a.rarity;
-        } else if (sortType === 'power') {
-          return b.power - a.power;
-        } else if (sortType === 'beauty') {
-          return b.beauty - a.beauty;
-        } else if (sortType === 'charisma') {
-          return b.charisma - a.charisma;
-        } else if (sortType === 'vocal') {
-          return b.vocal - a.vocal;
-        }
-        return 0;
-      });
+        availableCards.sort((a, b) => {
+            if (sortType === 'rarity') { return b.rarity - a.rarity; }
+            else if (sortType === 'power') { return b.power - a.power; }
+            else if (sortType === 'beauty') { return b.beauty - a.beauty; }
+            else if (sortType === 'charisma') { return b.charisma - a.charisma; }
+            else if (sortType === 'vocal') { return b.vocal - a.vocal; }
+            return 0;
+        });
     }
     
-    // Если коллекция пустая, показываем placeholder
     if (availableCards.length === 0) {
       const placeholder = document.createElement('div');
       placeholder.className = 'card-placeholder';
-      placeholder.textContent = 'No cards yet';
+      placeholder.textContent = 'No available cards';
       cardSelection.appendChild(placeholder);
     } else {
-      // Добавляем все доступные карточки
       availableCards.forEach((card, index) => {
         // Проверяем, не находится ли карточка уже в команде
         const isInTeam = currentTeam.some(member => 
@@ -356,13 +354,12 @@ function showHome() {
           cardContainer.className = 'position-relative';
           
           const cardElement = document.createElement('img');
-          cardElement.className = 'card-option img-fluid';
+          cardElement.className = 'card-option img-fluid team-manager-img'; // Добавляем класс team-manager-img
           cardElement.src = card.imgUrl || card.img;
           cardElement.alt = card.name;
-          cardElement.setAttribute('data-index', index);
           
           // Если эта карточка выбрана, добавляем класс selected
-          if (index === selectedCardIndex) {
+          if (selectedCardData && ((selectedCardData.id && selectedCardData.id === card.id) || selectedCardData.imgUrl === (card.imgUrl || card.img))) {
             cardElement.classList.add('selected');
           }
           
@@ -386,27 +383,28 @@ function showHome() {
           cardContainer.appendChild(tooltip);
           cardContainer.appendChild(badge);
           
-          // Обработчик клика по карточке
+          // Добавляем обработчик клика на карточку
           cardElement.addEventListener('click', function() {
             // Снимаем выделение со всех карточек
-            document.querySelectorAll('.card-option').forEach(card => {
-              card.classList.remove('selected');
+            document.querySelectorAll('.card-option').forEach(el => {
+              el.classList.remove('selected');
             });
             
             // Выделяем текущую карточку
             this.classList.add('selected');
-            selectedCardIndex = index;
+            selectedCardData = card; // Сохраняем объект карты
+            selectedSlotIndex = -1; 
             
-            // Если слот уже выбран, сразу добавляем карточку
-            if (selectedSlotIndex !== -1) {
-              addCardToTeam(availableCards[index], selectedSlotIndex);
-            } else {
-              // Показываем подсказку о необходимости выбрать слот
-              showFeedback('Выберите слот для этой карточки');
+            // Убираем подсветку со слотов
+            document.querySelectorAll('.team-slot').forEach(slot => {
+              slot.classList.remove('highlight', 'selected-slot');
+            });
+
+            // Показываем подсказку о необходимости выбрать слот
+            showFeedback('Карта выбрана. Теперь кликните на слот в команде.');
               
-              // Подсвечиваем пустые слоты
-              highlightEmptySlots();
-            }
+            // Подсвечиваем доступные слоты
+            highlightAvailableSlots();
           });
           
           cardSelection.appendChild(cardContainer);
@@ -415,17 +413,22 @@ function showHome() {
     }
   }
 
-  // Функция для подсветки пустых слотов
-  function highlightEmptySlots() {
-    const emptySlots = document.querySelectorAll('.team-slot');
-    for (let j = currentTeam.length; j < maxTeamSize; j++) {
-      emptySlots[j].classList.add('highlight');
-      setTimeout(() => {
-        if (!emptySlots[j].classList.contains('selected-slot')) {
-          emptySlots[j].classList.remove('highlight');
-        }
-      }, 2000);
-    }
+  // Новая функция для подсветки ВСЕХ слотов команды
+  function highlightAvailableSlots() {
+    const teamSlots = document.querySelectorAll('.team-slot');
+    teamSlots.forEach((slot, index) => {
+      if (index < maxTeamSize) { // Подсвечиваем только существующие слоты
+          slot.classList.add('highlight');
+          // Можно добавить таймер для снятия подсветки, если нужно
+          /*
+          setTimeout(() => {
+              if (selectedSlotIndex !== index) { // Не убирать подсветку, если слот выбран
+                  slot.classList.remove('highlight');
+              }
+          }, 3000); 
+          */
+      }
+    });
   }
 
   // Функция для обновления слотов команды в модальном окне
@@ -439,18 +442,35 @@ function showHome() {
       teamSlot.className = 'team-slot mb-3 p-2 bg-dark rounded';
       teamSlot.setAttribute('data-slot', i);
       
-      // Добавляем класс selected-slot, если этот слот выбран
-      if (i === selectedSlotIndex) {
-        teamSlot.classList.add('selected-slot', 'highlight');
-      }
-      
+      // ----- ИЗМЕНЕНИЕ ЛОГИКИ КЛИКА ПО СЛОТУ ----- 
+      const handleSlotClick = function(slotIndex) {
+          if (!selectedCardData) { // Проверяем наличие объекта карты
+              showFeedback('Сначала выберите карточку из вашей коллекции справа.');
+              return; 
+          }
+          
+          // Данные карты уже есть в selectedCardData
+          // Убираем повторное получение availableCards и поиск по индексу
+          /*
+          let availableCards = [...];
+          const sortType = ...;
+          if (sortType !== 'all') { ... }
+          const selected_card_data = availableCards[selectedCardIndex];
+          if (!selected_card_data) { ... }
+          */
+
+          // Добавляем карту в команду
+          addCardToTeam(selectedCardData, slotIndex); // Передаем объект карты
+      };
+      // ----- КОНЕЦ ИЗМЕНЕНИЯ ЛОГИКИ КЛИКА ПО СЛОТУ -----
+
       if (i < currentTeam.length) {
         // Слот занят
         const member = currentTeam[i];
         teamSlot.innerHTML = `
           <div class="d-flex">
             <div class="card-thumbnail me-3 position-relative">
-              <img src="${member.imgUrl || member.img}" alt="${member.name}" class="img-fluid">
+              <img src="${member.imgUrl || member.img}" alt="${member.name}" class="img-fluid team-manager-img"> 
               <div class="tooltip-card">
                 ${member.name} (${member.rarity}★)<br>
                 P: ${member.power} | B: ${member.beauty}<br>
@@ -468,18 +488,17 @@ function showHome() {
         `;
 
         teamSlot.querySelector('.remove-member').addEventListener('click', (event) => {
-          event.stopPropagation();
+          event.stopPropagation(); // Предотвращаем всплытие на родительский div
           if (confirm(`Remove ${member.name} from your team?`)) {
             currentTeam.splice(i, 1);
-            selectedSlotIndex = -1; // Сбрасываем выбранный слот
+            selectedCardData = null; // Сбрасываем выбор карты
+            selectedSlotIndex = -1; 
             updateTeamModalContent();
           }
         });
         
-        // Добавляем возможность выбрать занятый слот для замены
-        teamSlot.addEventListener('click', function() {
-          selectTeamSlot(i);
-        });
+        // Обработчик для занятого слота
+        teamSlot.addEventListener('click', () => handleSlotClick(i));
         
       } else {
         // Пустой слот
@@ -492,15 +511,13 @@ function showHome() {
             </div>
             <div>
               <p class="mb-0">Slot #${i+1}</p>
-              <small class="text-muted">Click to select this slot for a new card</small>
+              <small class="text-muted">Кликните, чтобы поместить сюда выбранную карту</small>
             </div>
           </div>
         `;
         
-        // Обработчик клика по пустому слоту
-        teamSlot.addEventListener('click', function() {
-          selectTeamSlot(i);
-        });
+        // Обработчик для пустого слота
+        teamSlot.addEventListener('click', () => handleSlotClick(i));
       }
       
       modalTeamSlots.appendChild(teamSlot);
@@ -528,7 +545,7 @@ function showHome() {
     selectedSlotIndex = slotIndex;
     
     // Если карточка уже выбрана, сразу добавляем ее в команду
-    if (selectedCardIndex !== -1) {
+    if (selectedCardData !== null) {
       const availableCards = [...collection].filter(card => 
         !currentTeam.some(member => 
           (member.id && member.id === card.id) || 
@@ -556,7 +573,7 @@ function showHome() {
         });
       }
       
-      addCardToTeam(availableCards[selectedCardIndex], slotIndex);
+      addCardToTeam(availableCards[selectedCardData.id], slotIndex);
     } else {
       // Показываем подсказку о необходимости выбрать карточку
       showFeedback('Теперь выберите карточку для этого слота');
@@ -565,13 +582,13 @@ function showHome() {
 
   // Функция для добавления карточки в команду
   function addCardToTeam(card, slotIndex) {
-    if (!card) {
-      showFeedback('Ошибка: карточка не найдена');
+    if (!card) { // Проверка на null/undefined
+      showFeedback('Ошибка: не переданы данные карты для добавления.');
       return;
     }
-    
+
     const teamMember = {
-      id: card.id || Date.now(),
+      id: card.id || Date.now() + Math.random(), // Улучшаем генерацию ID на всякий случай
       name: card.name,
       img: card.img,
       imgUrl: card.imgUrl || card.img,
@@ -583,24 +600,18 @@ function showHome() {
       type: card.type
     };
     
-    // Добавляем карточку в команду на указанный слот
     if (slotIndex < currentTeam.length) {
-      // Заменяем существующую карточку
       currentTeam[slotIndex] = teamMember;
     } else {
-      // Добавляем новую карточку
       currentTeam.push(teamMember);
     }
     
-    // Показываем обратную связь
-    showFeedback(`${card.name} добавлен в команду!`);
+    showFeedback(`${card.name} добавлен(а) в команду!`);
     
-    // Сбрасываем выбранные элементы
-    selectedCardIndex = -1;
+    selectedCardData = null; // Сбрасываем объект карты
     selectedSlotIndex = -1;
     
-    // Обновляем содержимое модального окна
-    updateTeamModalContent();
+    updateTeamModalContent(); // Обновляем окно ПОСЛЕ сброса
   }
 
   // Функция для удаления члена команды
@@ -819,128 +830,203 @@ function showHome() {
     "Miku Star", "Miku Dream", "Miku Crystal", "Miku Aurora", "Miku Galaxy"
   ];
 
+  // Массив для отслеживания использованных локальных изображений (перемещаем в глобальную область)
+  const localImages = [
+    'img_card_game/miku (1).png',
+    'img_card_game/miku (2).png',
+    'img_card_game/miku (3).png',
+    'img_card_game/miku (4).png',
+    'img_card_game/miku (5).png',
+    'img_card_game/miku (6).png',
+    'img_card_game/miku (7).png',
+    'img_card_game/miku (1).jpg',
+    'img_card_game/miku (2).jpg',
+    'img_card_game/miku (3).jpg',
+    'img_card_game/miku (4).jpg',
+    'img_card_game/miku (5).jpg',
+    'img_card_game/miku (6).jpg',
+    'img_card_game/miku (7).jpg',
+    'img_card_game/miku (8).jpg',
+    'img_card_game/miku (9).jpg',
+    'img_card_game/miku (10).jpg',
+    'img_card_game/miku (11).jpg',
+    'img_card_game/miku (12).jpg',
+    'img_card_game/miku (13).jpg',
+    'img_card_game/miku (14).jpg',
+    'img_card_game/miku (15).jpg',
+    'img_card_game/miku (16).jpg',
+    'img_card_game/miku (17).jpg',
+    'img_card_game/miku (18).jpg',
+    'img_card_game/miku (19).jpg',
+    'img_card_game/miku (20).jpg',
+    'img_card_game/miku (21).jpg',
+    'img_card_game/miku (22).jpg',
+    'img_card_game/miku (23).jpg',
+    'img_card_game/miku (24).jpg',
+    'img_card_game/miku (25).jpg',
+    'img_card_game/miku (26).jpg',
+    'img_card_game/miku (27).jpg',
+    'img_card_game/miku (28).jpg',
+    'img_card_game/miku (29).jpg',
+    'img_card_game/miku (30).jpg',
+    'img_card_game/miku (31).jpg',
+    'img_card_game/miku (32).jpg',
+    'img_card_game/miku (33).jpg',
+    'img_card_game/miku (34).jpg',
+    'img_card_game/miku (35).jpg',
+    'img_card_game/miku (82).jpg',
+    'img_card_game/miku (81).jpg',
+    'img_card_game/miku (80).jpg',
+    'img_card_game/miku (79).jpg',
+    'img_card_game/miku (78).jpg',
+    'img_card_game/miku (77).jpg',
+    'img_card_game/miku (76).jpg',
+    'img_card_game/miku (75).jpg',
+    'img_card_game/miku (74).jpg',
+    'img_card_game/miku (73).jpg',
+    'img_card_game/miku (72).jpg',
+    'img_card_game/miku (71).jpg',
+    'img_card_game/miku (70).jpg',
+    'img_card_game/miku (69).jpg',
+    'img_card_game/miku (68).jpg',
+    'img_card_game/miku (67).jpg',
+    'img_card_game/miku (66).jpg',
+    'img_card_game/miku (65).jpg',
+    'img_card_game/miku (64).jpg',
+    'img_card_game/miku (63).jpg',
+    'img_card_game/miku (62).jpg',
+    'img_card_game/miku (61).jpg',
+    'img_card_game/miku (60).jpg',
+    'img_card_game/miku (59).jpg',
+    'img_card_game/miku (58).jpg',
+    'img_card_game/miku (57).jpg',
+    'img_card_game/miku (56).jpg',
+    'img_card_game/miku (55).jpg',
+    'img_card_game/miku (54).jpg',
+    'img_card_game/miku (53).jpg',
+    'img_card_game/miku (52).jpg',    
+    'img_card_game/miku (51).jpg',
+    'img_card_game/miku (50).jpg',
+    'img_card_game/miku (49).jpg',
+    'img_card_game/miku (48).jpg',
+    'img_card_game/miku (47).jpg',
+    'img_card_game/miku (46).jpg',
+    'img_card_game/miku (45).jpg',
+    'img_card_game/miku (44).jpg',
+    'img_card_game/miku (43).jpg',
+    'img_card_game/miku (42).jpg',
+    'img_card_game/miku (41).jpg',
+    'img_card_game/miku (40).jpg',
+    'img_card_game/miku (39).jpg',
+    'img_card_game/miku (38).jpg',
+    'img_card_game/miku (37).jpg',
+    'img_card_game/miku (36).jpg'
+    
+  ];
+
+  let usedLocalImages = new Set();
+  let unavailableImages = new Set();
+
   async function getRandomDanbooruImage() {
-    const tags = "hatsune_miku";
-    const url = `https://danbooru.donmai.us/posts.json?tags=${encodeURIComponent(tags)}&limit=100`;
+    // Используем только локальные изображения
+    const availableImages = localImages.filter(image => 
+      !usedLocalImages.has(image) && !unavailableImages.has(image)
+    );
 
-    // Создаем элемент для отображения загрузки
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.id = 'loading-indicator';
-    loadingIndicator.style.position = 'fixed';
-    loadingIndicator.style.top = '50%';
-    loadingIndicator.style.left = '50%';
-    loadingIndicator.style.transform = 'translate(-50%, -50%)';
-    loadingIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-    loadingIndicator.style.color = '#fff';
-    loadingIndicator.style.padding = '10px 20px';
-    loadingIndicator.style.borderRadius = '5px';
-    loadingIndicator.style.zIndex = '1000';
-    loadingIndicator.textContent = 'Загрузка...';
-    document.body.appendChild(loadingIndicator);
-
-    // Создаем тайм-аут на 3 секунды
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out')), 3000);
-    });
-
-    try {
-      // Используем Promise.race для соревнования между запросом и тайм-аутом
-      const response = await Promise.race([
-        fetch(url),
-        timeoutPromise
-      ]);
-
-      if (!response.ok) throw new Error('Network response was not ok');
-      const data = await response.json();
-
-      if (data.length > 0) {
-        const shuffledData = data.sort(() => Math.random() - 0.5);
-        for (const post of shuffledData) {
-          if (post.file_url) {
-            try {
-              const imgResponse = await fetch(post.file_url);
-              if (imgResponse.ok) {
-                // Убираем индикатор загрузки перед возвратом результата
-                document.body.removeChild(loadingIndicator);
-                return post.file_url;
-              }
-            } catch (error) {
-              console.error("Ошибка загрузки изображения:", error);
-            }
-          }
+    if (availableImages.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableImages.length);
+      const selectedImage = availableImages[randomIndex];
+      
+      try {
+        const img = new Image();
+        img.src = selectedImage;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = () => {
+            console.error(`Ошибка загрузки локального изображения ${selectedImage}: изображение недоступно`);
+            unavailableImages.add(selectedImage); // Помечаем как недоступное
+            reject(new Error(`Failed to load local image: ${selectedImage}`)); // Добавляем reject с ошибкой
+          };
+        });
+        usedLocalImages.add(selectedImage);
+        return selectedImage;
+      } catch (error) {
+        // Если изображение недоступно, рекурсивно пробуем другое
+        // Добавим проверку, чтобы избежать бесконечной рекурсии, если все недоступны
+        if (unavailableImages.size < localImages.length) {
+          return getRandomDanbooruImage(); 
+        } else {
+          console.error("Все локальные изображения недоступны или не удалось загрузить.");
+          return null; // Возвращаем null, если все перепробованы и недоступны
         }
-      }
-    } catch (error) {
-      console.error("Ошибка при запросе к Danbooru API:", error);
-    } finally {
-      // Убираем индикатор загрузки в любом случае
-      if (document.body.contains(loadingIndicator)) {
-        document.body.removeChild(loadingIndicator);
       }
     }
 
-    // Если запрос не удался или превышен тайм-аут, используем локальные изображения
-    const localImages = [
-      'img_card_game/miku (1).png',
-      'img_card_game/miku (2).png',
-      'img_card_game/miku (3).png',
-      'img_card_game/miku (4).png',
-      'img_card_game/miku (5).png',
-      'img_card_game/miku (6).png',
-      'img_card_game/miku (7).png',
-      'img_card_game/miku (8).png',
-      'img_card_game/miku (9).png',
+    // Если все доступные изображения уже использованы, сбрасываем список использованных и пробуем снова
+    if (usedLocalImages.size === localImages.length - unavailableImages.size && availableImages.length === 0) {
+      console.log("Все локальные изображения были использованы, начинаем заново...");
+      usedLocalImages.clear();
+      // Рекурсивно вызываем, чтобы выбрать из теперь полного списка
+      return getRandomDanbooruImage();
+    }
 
-      'img_card_game/miku (1).jpg',
-      'img_card_game/miku (2).jpg',
-      'img_card_game/miku (3).jpg',
-      'img_card_game/miku (4).jpg',
-      'img_card_game/miku (5).jpg',
-      'img_card_game/miku (6).jpg',
-      'img_card_game/miku (7).jpg',
-      'img_card_game/miku (8).jpg',
-      'img_card_game/miku (9).jpg',
-      'img_card_game/miku (10).jpg',
-      'img_card_game/miku (11).jpg',
-      'img_card_game/miku (12).jpg',
-      'img_card_game/miku (13).jpg',
-      'img_card_game/miku (14).jpg',
-      'img_card_game/miku (15).jpg',
-      'img_card_game/miku (16).jpg',
-      'img_card_game/miku (17).jpg',
-      'img_card_game/miku (18).jpg',
-      'img_card_game/miku (19).jpg',
-      'img_card_game/miku (20).jpg',
-      'img_card_game/miku (21).jpg',
-      'img_card_game/miku (22).jpg',
-      'img_card_game/miku (23).jpg',
-      'img_card_game/miku (24).jpg',
-      'img_card_game/miku (25).jpg',
-      'img_card_game/miku (26).jpg',
-      'img_card_game/miku (27).jpg',
-      'img_card_game/miku (28).jpg',
-      'img_card_game/miku (29).jpg',
-      'img_card_game/miku (30).jpg',
-      'img_card_game/miku (31).jpg',
-      'img_card_game/miku (32).jpg',
-      'img_card_game/miku (33).jpg',
-      'img_card_game/miku (34).jpg',
-      'img_card_game/miku (35).jpg'
-    ];
-
-    // Возвращаем случайное изображение из локальной папки
-    return localImages[Math.floor(Math.random() * localImages.length)];
+    // Если дошли сюда, значит что-то пошло не так (например, все изображения недоступны)
+    console.error("Не удалось найти доступное локальное изображение.");
+    return null; // Возвращаем null в качестве запасного варианта
   }
 
-  // Функция для генерации уникального имени на основе URL изображения
-  function generateUniqueName(imgUrl) {
-    // Используем хэш URL для генерации уникального имени
-    const hash = imgUrl.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  let usedNames = new Set();
+
+  function generateUniqueName(imgUrl, rarity = 1, power = 0, beauty = 0, charisma = 0, vocal = 0) {
+    // Создаем хэш на основе всех параметров
+    const hash = [imgUrl, rarity, power, beauty, charisma, vocal]
+      .join('_')
+      .split('')
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+    // Тематические префиксы в зависимости от доминирующей характеристики
+    const prefixes = {
+      power: ["Energetic", "Powerful", "Dynamic", "Strong"],
+      beauty: ["Elegant", "Graceful", "Beautiful", "Charming"],
+      charisma: ["Charismatic", "Magnetic", "Radiant", "Stunning"],
+      vocal: ["Melodic", "Harmonic", "Singing", "Musical"]
+    };
+
+    // Определяем доминирующую характеристику
+    const stats = {
+      power: power,
+      beauty: beauty,
+      charisma: charisma,
+      vocal: vocal
+    };
+    
+    const dominantStat = Object.entries(stats).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    
+    // Выбираем случайный префикс для доминирующей характеристики
+    const prefix = prefixes[dominantStat][hash % prefixes[dominantStat].length];
+
     const names = [
-      "Hatsune Miku", "Snow Miku", "Future Miku", "Miku Classic", "Miku Angel", 
-      "Miku Star", "Miku Dream", "Miku Crystal", "Miku Aurora", "Miku Galaxy"
+      "Miku", "Snow Princess", "Future Diva", "Virtual Singer", "Cyber Angel", 
+      "Star Vocalist", "Dream Idol", "Crystal Voice", "Digital Performer", "Galaxy Queen"
     ];
-    return names[hash % names.length] + ` #${hash}`; // Добавляем уникальный идентификатор
+    
+    const baseName = names[hash % names.length];
+    
+    // Создаем короткий ID (3 цифры)
+    const shortId = (hash % 1000).toString().padStart(3, '0');
+    
+    // Возвращаем упрощенное имя
+    return `${prefix} ${baseName} #${shortId}`;
+  }
+
+  // Функция для генерации описания характеристик
+  function generateStatsDescription(power, beauty, charisma, vocal) {
+    return `<div class="card-stats">
+      <div><strong>P${power}</strong>: Power (Сила)</div>
+      <div><strong>B${beauty}</strong>: Beauty (Красота)</div>
+      <div><strong>C${charisma}</strong>: Charisma (Харизма)</div>
+      <div><strong>V${vocal}</strong>: Vocal (Вокал)</div>
+    </div>`;
   }
 
   // Добавим переменные для отслеживания коллекции
@@ -973,114 +1059,103 @@ function showHome() {
     console.log(`Collection progress: ${collectionPercentage}%`);
   }
 
-  // Обновляем функцию pullGacha, чтобы она отслеживала уникальные карты
-  async function pullGacha(times) {
-    // Проверяем, достаточно ли у игрока гемов
-    const cost = times * 10;
-    if (totalGems < cost) {
-      alert(`Not enough gems! You need ${cost}💎, but you have ${totalGems}💎`);
-      return;
-    }
-    
-    // Списываем гемы
-    totalGems -= cost;
-    updateTycoonStats();
-    
-    const resultContainer = document.getElementById("gachaResults");
-    resultContainer.innerHTML = "";
-
-    for (let i = 0; i < times; i++) {
-      const imgUrl = await getRandomDanbooruImage();
-      if (!imgUrl) continue;
-
-      // Генерируем уникальное имя на основе URL изображения
-      const uniqueName = generateUniqueName(imgUrl);
-
-      // Генерация редкости с учетом вероятности
-      const rarity = getRandomRarity();
-
-      // Ограничиваем характеристики в зависимости от редкости
-      const maxStat = rarity * 20; // Максимальное значение характеристики = редкость * 20
-      const power = Math.floor(Math.random() * maxStat) + 1;
-      const beauty = Math.floor(Math.random() * maxStat) + 1;
-      const charisma = Math.floor(Math.random() * maxStat) + 1;
-      const vocal = Math.floor(Math.random() * maxStat) + 1;
-
-      const char = {
-        name: uniqueName, // Используем уникальное имя
-        rarity: rarity,
-        img: imgUrl,
-        type: "miku",
-        power: power,
-        beauty: beauty,
-        charisma: charisma,
-        vocal: vocal,
-        description: "A unique Miku character with random stats."
-      };
-      collection.push(char);
-      
-      // Обновляем список уникальных карт
-      if (!uniqueCards[imgUrl]) {
-        uniqueCards[imgUrl] = char;
-        // Обновляем счетчик коллекции при получении новой уникальной карты
-        updateCollectionCounter();
-      }
-
-      const card = document.createElement("div");
-      card.className = `col-md-3 gacha-animation`;
-      card.innerHTML = `
-        <div class="gacha-card p-2 rarity-${char.rarity}">
-          <img src="${char.img}" class="img-fluid rounded" alt="${char.name}"/>
-          <div class="text-center mt-2">
-            <h5>${char.name}</h5>
-            <span>${"★".repeat(char.rarity)}</span>
-          </div>
-        </div>
-      `;
-
-      // Добавляем анимацию "выпадения" карточки
-      card.style.animation = "drop-in 0.5s ease-out";
-
-      // Добавляем обработчик клика на карточку
-      card.addEventListener("click", () => {
-        document.getElementById("modalImage").src = char.img;
-        document.getElementById("modalName").textContent = char.name;
-        document.getElementById("modalRarity").textContent = "★".repeat(char.rarity);
-        document.getElementById("modalPower").textContent = char.power;
-        document.getElementById("modalBeauty").textContent = char.beauty;
-        document.getElementById("modalCharisma").textContent = char.charisma;
-        document.getElementById("modalVocal").textContent = char.vocal;
-        document.getElementById("modalDescription").textContent = char.description;
-
-        // Обновляем прогресс-бары
-        document.getElementById("modalPowerBar").style.width = `${char.power}%`;
-        document.getElementById("modalBeautyBar").style.width = `${char.beauty}%`;
-        document.getElementById("modalCharismaBar").style.width = `${char.charisma}%`;
-        document.getElementById("modalVocalBar").style.width = `${char.vocal}%`;
-
-        const modal = new bootstrap.Modal(document.getElementById("characterModal"));
-        modal.show();
-      });
-
-      // Добавляем задержку перед показом карточки
-      setTimeout(() => {
-        resultContainer.appendChild(card);
-      }, i * 300); // Задержка в 300 мс между карточками
-
-      // Добавляем звуковой эффект
-      try {
-      const audio = new Audio("https://www.soundjay.com/button/beep-07.mp3");
-      audio.play();
-      } catch (e) {
-        console.log("Аудио не удалось воспроизвести:", e);
-    }
-    }
-    
-    // Обновляем статистику в профиле
-    updateTycoonStats();
-    updateCollection();
-    updateCollectionCounter();
+  function generateCardKey(imgUrl, rarity, power, beauty, charisma, vocal) {
+    return `${imgUrl}_${rarity}_${power}_${beauty}_${charisma}_${vocal}`;
   }
+
+  // Глобальная переменная для хранения данных последнего пулла
+  let lastPulledCardsData = [];
+  let gachaPullModalInstance = null;
+
+  // Модифицированная функция для отображения карточек
+  function displayPulledCards(cardsData, containerId) {
+    const resultContainer = document.getElementById(containerId);
+    if (!resultContainer) {
+        console.error(`Container with id ${containerId} not found!`);
+        return;
+    }
+    resultContainer.innerHTML = ""; // Очищаем контейнер
+
+    cardsData.forEach((char, index) => {
+        const cardCol = document.createElement("div");
+        cardCol.className = `col-lg-3 col-md-4 col-sm-6 gacha-animation`; 
+
+        const cardElement = document.createElement("div");
+        cardElement.className = `gacha-card p-2 rarity-${char.rarity}`;
+        cardElement.innerHTML = `
+            <img src="${char.img}" class="img-fluid rounded" alt="${char.name}"/>
+            <div class="text-center mt-1">
+              <h6 class="mb-0" style="font-size: 0.9rem;">${char.name}</h6> 
+              <span style="font-size: 0.8rem;">${"★".repeat(char.rarity)}</span>
+            </div>
+        `;
+
+        cardElement.style.animation = "drop-in 0.5s ease-out";
+        cardElement.style.animationDelay = `${index * 0.1}s`;
+
+        // --- УДАЛЯЕМ УСЛОВИЕ IF И ВСЕГДА ДОБАВЛЯЕМ КЛИК --- 
+        // if (containerId === 'gachaResults') { ... } else { ... }
+        cardElement.addEventListener("click", () => {
+            // Убедимся, что элементы модального окна деталей существуют
+            const modalImage = document.getElementById("modalImage");
+            const modalName = document.getElementById("modalName");
+            const modalRarity = document.getElementById("modalRarity");
+            const modalPower = document.getElementById("modalPower");
+            const modalBeauty = document.getElementById("modalBeauty");
+            const modalCharisma = document.getElementById("modalCharisma");
+            const modalVocal = document.getElementById("modalVocal");
+            const modalDescription = document.getElementById("modalDescription");
+            const modalStatsInfo = document.getElementById("modalStatsInfo");
+            const modalPowerBar = document.getElementById("modalPowerBar");
+            const modalBeautyBar = document.getElementById("modalBeautyBar");
+            const modalCharismaBar = document.getElementById("modalCharismaBar");
+            const modalVocalBar = document.getElementById("modalVocalBar");
+            const characterModalElement = document.getElementById("characterModal");
+
+            if (!characterModalElement || !modalImage || !modalName /* ... добавьте остальные проверки ... */) {
+                console.error("Ошибка: Не найдены элементы модального окна деталей персонажа!");
+                return;
+            }
+            
+            // Заполняем данными и показываем модальное окно деталей
+            modalImage.src = char.imgUrl || char.img; // Используем imgUrl или img
+            modalName.textContent = char.name;
+            modalRarity.textContent = "★".repeat(char.rarity);
+            modalPower.textContent = char.power;
+            modalBeauty.textContent = char.beauty;
+            modalCharisma.textContent = char.charisma;
+            modalVocal.textContent = char.vocal;
+            modalDescription.textContent = char.description;
+            if(modalStatsInfo) modalStatsInfo.innerHTML = generateStatsDescription(char.power, char.beauty, char.charisma, char.vocal);
+            
+            // Обновляем прогресс-бары
+            if(modalPowerBar) modalPowerBar.style.width = `${char.power}%`;
+            if(modalBeautyBar) modalBeautyBar.style.width = `${char.beauty}%`;
+            if(modalCharismaBar) modalCharismaBar.style.width = `${char.charisma}%`;
+            if(modalVocalBar) modalVocalBar.style.width = `${char.vocal}%`;
+
+            // Создаем и показываем экземпляр модального окна Bootstrap
+            // Важно: не создавайте новый экземпляр каждый раз, если он уже есть
+            let characterModalInstance = bootstrap.Modal.getInstance(characterModalElement);
+            if (!characterModalInstance) {
+                characterModalInstance = new bootstrap.Modal(characterModalElement);
+            }
+            characterModalInstance.show();
+        });
+        // ---------------------------------------------------
+        
+        cardCol.appendChild(cardElement);
+        resultContainer.appendChild(cardCol);
+
+        // Звуковой эффект
+        try {
+            const audio = new Audio("https://www.soundjay.com/button/beep-07.mp3");
+            setTimeout(() => audio.play(), index * 150);
+        } catch (e) {
+            console.log("Аудио не удалось воспроизвести:", e);
+        }
+    }); // Конец forEach
+  } // Конец функции displayPulledCards
 
   // Функция для генерации редкости с учетом вероятности
   function getRandomRarity() {
@@ -1100,6 +1175,170 @@ function showHome() {
       return 1; // 1 звезда с вероятностью 60%
     }
   }
+
+  // Обновляем pullGacha
+  async function pullGacha(times) {
+    const cost = times * 10;
+    if (totalGems < cost) {
+      alert(`Not enough gems! You need ${cost}💎, but you have ${totalGems}💎`);
+      return;
+    }
+
+    totalGems -= cost;
+    updateTycoonStats();
+
+    // --- Модальное окно --- 
+    const modalElement = document.getElementById('gachaPullModal');
+    const modalMessage = document.getElementById('gachaPullModalMessage');
+    const collectButton = document.getElementById('collectGachaButton');
+    const spinner = document.getElementById('gachaSpinner'); 
+    const modalResultsContainer = document.getElementById('gachaPullModalResults'); // Контейнер внутри модалки
+
+    // --- ДОБАВЛЯЕМ ПРОВЕРКИ НА NULL --- 
+    if (!modalElement || !modalMessage || !collectButton || !spinner || !modalResultsContainer) {
+        console.error("Ошибка: Не найден один или несколько элементов модального окна гачи!");
+        // Логируем, что именно не найдено
+        if (!modalElement) console.error('modalElement is null');
+        if (!modalMessage) console.error('modalMessage is null');
+        if (!collectButton) console.error('collectButton is null');
+        if (!spinner) console.error('spinner is null');
+        if (!modalResultsContainer) console.error('modalResultsContainer is null');
+        alert("Произошла ошибка интерфейса гачи. Пожалуйста, перезагрузите страницу.");
+        return; // Прерываем выполнение, если элементы не найдены
+    }
+    // --- КОНЕЦ ПРОВЕРОК --- 
+
+    modalMessage.textContent = `Pulling ${times} card(s)...`;
+    collectButton.disabled = true;
+    spinner.style.display = 'block'; // Показываем спиннер
+    modalResultsContainer.innerHTML = ''; // Очищаем предыдущие карты в модалке
+
+    if (!gachaPullModalInstance) {
+        // Убедимся, что modalElement не null перед созданием
+        if (modalElement) {
+          gachaPullModalInstance = new bootstrap.Modal(modalElement);
+        } else {
+          console.error("Невозможно создать экземпляр модального окна: modalElement is null");
+          return; // Прерываем, если нет основного элемента окна
+        }
+    }
+    gachaPullModalInstance.show();
+    // ------------------------
+
+    // --- Генерация данных карт --- 
+    lastPulledCardsData = []; 
+    let duplicates = [];
+    let pulledCardsPromises = [];
+
+    for (let i = 0; i < times; i++) {
+      pulledCardsPromises.push((async () => {
+          let imgUrl;
+          let rarity;
+          let attempts = 0;
+          let cardKey;
+          let power, beauty, charisma, vocal;
+
+          do {
+              imgUrl = await getRandomDanbooruImage();
+              if (!imgUrl) continue; 
+
+              rarity = getRandomRarity();
+              const maxStat = rarity * 20;
+              power = Math.floor(Math.random() * maxStat) + 1;
+              beauty = Math.floor(Math.random() * maxStat) + 1;
+              charisma = Math.floor(Math.random() * maxStat) + 1;
+              vocal = Math.floor(Math.random() * maxStat) + 1;
+              cardKey = generateCardKey(imgUrl, rarity, power, beauty, charisma, vocal);
+
+              attempts++;
+              if (attempts > 20) { 
+                  console.warn("Не удалось найти уникальный арт для выбранной редкости после 20 попыток.");
+                  return null; 
+              }
+          } while (uniqueCards[cardKey]);
+
+          if (!imgUrl) return null; 
+
+          const uniqueName = generateUniqueName(imgUrl, rarity, power, beauty, charisma, vocal);
+
+          const char = {
+              name: uniqueName,
+              rarity: rarity,
+              img: imgUrl, 
+              imgUrl: imgUrl,
+              type: "miku",
+              power: power,
+              beauty: beauty,
+              charisma: charisma,
+              vocal: vocal,
+              description: "A unique Miku character."
+          };
+
+          collection.push(char);
+          if (!uniqueCards[cardKey]) {
+              uniqueCards[cardKey] = char;
+          } else {
+              duplicates.push(char);
+          }
+          return char; 
+      })());
+    }
+
+    const results = await Promise.all(pulledCardsPromises);
+    lastPulledCardsData = results.filter(card => card !== null); 
+  // --------------------------- 
+
+  // --- Отображение в модальном окне --- 
+  // Перепроверяем элементы перед использованием
+  if (spinner) {
+    spinner.style.display = 'none'; // Скрываем спиннер
+  }
+  if (modalMessage) {
+    modalMessage.textContent = `Pull complete! You got ${lastPulledCardsData.length} card(s).`;
+  }
+  
+  displayPulledCards(lastPulledCardsData, 'gachaPullModalResults'); 
+
+  if (collectButton) {
+    collectButton.disabled = false; // Активируем кнопку "Забрать"
+  }
+}
+
+  // Добавляем обработчик на кнопку "Забрать"
+  document.addEventListener('DOMContentLoaded', function() {
+    const collectButton = document.getElementById('collectGachaButton');
+    if (collectButton) {
+        collectButton.addEventListener('click', function() {
+            if (lastPulledCardsData.length > 0) {
+                // Отображаем карты
+                displayPulledCards(lastPulledCardsData);
+                
+                // Обновляем счетчики и коллекцию
+                updateCollection();
+                updateCollectionCounter(); 
+                updateTycoonStats(); // Обновляем все статы, включая гемы
+            }
+            
+            // Закрываем модальное окно
+            if (gachaPullModalInstance) {
+                gachaPullModalInstance.hide();
+            }
+            
+            // Очищаем временные данные
+            lastPulledCardsData = [];
+        });
+    }
+
+    // ... остальной код DOMContentLoaded ...
+    
+    // Инициализация модального окна гачи (если нужно)
+    const modalElement = document.getElementById('gachaPullModal');
+    if (modalElement) {
+        // Не создаем экземпляр здесь, создадим при первом показе
+    }
+    
+    // ... остальной код инициализации ...
+  });
 
   function updateCollection() {
     const allTab = document.getElementById("all");
@@ -1175,6 +1414,7 @@ function showHome() {
             document.getElementById("modalCharisma").textContent = char.charisma;
             document.getElementById("modalVocal").textContent = char.vocal;
             document.getElementById("modalDescription").textContent = char.description;
+            document.getElementById("modalStatsInfo").innerHTML = generateStatsDescription(char.power, char.beauty, char.charisma, char.vocal);
 
             // Обновляем прогресс-бары
             document.getElementById("modalPowerBar").style.width = `${char.power}%`;
@@ -1211,6 +1451,7 @@ function showHome() {
           document.getElementById("modalCharisma").textContent = char.charisma;
           document.getElementById("modalVocal").textContent = char.vocal;
           document.getElementById("modalDescription").textContent = char.description;
+          document.getElementById("modalStatsInfo").innerHTML = generateStatsDescription(char.power, char.beauty, char.charisma, char.vocal);
 
           // Обновляем прогресс-бары
           document.getElementById("modalPowerBar").style.width = `${char.power}%`;
@@ -1607,5 +1848,53 @@ function showHome() {
       document.querySelectorAll('.musical-particle-1, .musical-particle-2, .musical-particle-3, .musical-particle-4, .musical-particle-5, .floating-note').forEach(particle => {
         particle.style.transform = `translate(${moveX}px, ${moveY}px)`;
       });
+    });
+  });
+
+  // Добавляем обработчик для кнопки объяснения характеристик
+  document.getElementById('showStatsInfoBtn').addEventListener('click', function() {
+    // Создаем модальное окно с объяснением характеристик
+    const statsInfoModal = document.createElement('div');
+    statsInfoModal.className = 'modal fade';
+    statsInfoModal.id = 'statsInfoModal';
+    statsInfoModal.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Объяснение характеристик</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Характеристики персонажей:</strong></p>
+            <ul class="stats-explanation">
+              <li><strong>P (Power/Сила)</strong>: Определяет общую эффективность персонажа в команде и влияет на успех выступлений. Чем выше сила, тем больше влияние персонажа на команду.</li>
+              <li><strong>B (Beauty/Красота)</strong>: Влияет на внешнюю привлекательность выступлений и способность привлекать определенную аудиторию. Персонажи с высокой красотой создают более зрелищные выступления.</li>
+              <li><strong>C (Charisma/Харизма)</strong>: Напрямую влияет на привлечение фанатов и удержание аудитории. Персонажи с высокой харизмой привлекают больше фанатов после выступлений.</li>
+              <li><strong>V (Vocal/Вокал)</strong>: Определяет качество создаваемых песен и их популярность. Хороший вокал позволяет создавать более успешные треки.</li>
+            </ul>
+            <div class="mt-3">
+              <p><strong>Как использовать характеристики:</strong></p>
+              <ul>
+                <li>Для создания хороших песен выбирайте персонажей с высоким значением Vocal</li>
+                <li>Для успешных концертов важна комбинация Beauty и Power</li>
+                <li>Для быстрого роста фан-базы ориентируйтесь на персонажей с высокой Charisma</li>
+                <li>Сбалансированная команда с разными сильными сторонами даст лучшие результаты</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Добавляем модальное окно в DOM
+    document.body.appendChild(statsInfoModal);
+    
+    // Показываем модальное окно
+    const modal = new bootstrap.Modal(statsInfoModal);
+    modal.show();
+    
+    // Удаляем модальное окно после закрытия
+    statsInfoModal.addEventListener('hidden.bs.modal', function() {
+      document.body.removeChild(statsInfoModal);
     });
   });
