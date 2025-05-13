@@ -1030,7 +1030,7 @@ function showHome() {
   }
 
   // Добавим переменные для отслеживания коллекции
-  const TOTAL_UNIQUE_CARDS = 200; // Общее количество уникальных карт
+  const TOTAL_UNIQUE_CARDS = localImages.length; // <--- Обновляем, чтобы соответствовать кол-ву артов
   let uniqueCardsCollected = 0; // Количество собранных уникальных карт
 
   // Массив для хранения информации о собранных уникальных картах
@@ -1187,160 +1187,111 @@ function showHome() {
     totalGems -= cost;
     updateTycoonStats();
 
-    // --- Модальное окно --- 
     const modalElement = document.getElementById('gachaPullModal');
     const modalMessage = document.getElementById('gachaPullModalMessage');
     const collectButton = document.getElementById('collectGachaButton');
-    const spinner = document.getElementById('gachaSpinner'); 
-    const modalResultsContainer = document.getElementById('gachaPullModalResults'); // Контейнер внутри модалки
+    const spinner = document.getElementById('gachaSpinner');
+    const modalResultsContainer = document.getElementById('gachaPullModalResults');
 
-    // --- ДОБАВЛЯЕМ ПРОВЕРКИ НА NULL --- 
     if (!modalElement || !modalMessage || !collectButton || !spinner || !modalResultsContainer) {
         console.error("Ошибка: Не найден один или несколько элементов модального окна гачи!");
-        // Логируем, что именно не найдено
-        if (!modalElement) console.error('modalElement is null');
-        if (!modalMessage) console.error('modalMessage is null');
-        if (!collectButton) console.error('collectButton is null');
-        if (!spinner) console.error('spinner is null');
-        if (!modalResultsContainer) console.error('modalResultsContainer is null');
         alert("Произошла ошибка интерфейса гачи. Пожалуйста, перезагрузите страницу.");
-        return; // Прерываем выполнение, если элементы не найдены
+        return;
     }
-    // --- КОНЕЦ ПРОВЕРОК --- 
 
     modalMessage.textContent = `Pulling ${times} card(s)...`;
     collectButton.disabled = true;
-    spinner.style.display = 'block'; // Показываем спиннер
-    modalResultsContainer.innerHTML = ''; // Очищаем предыдущие карты в модалке
+    spinner.style.display = 'block';
+    modalResultsContainer.innerHTML = '';
 
     if (!gachaPullModalInstance) {
-        // Убедимся, что modalElement не null перед созданием
         if (modalElement) {
           gachaPullModalInstance = new bootstrap.Modal(modalElement);
         } else {
           console.error("Невозможно создать экземпляр модального окна: modalElement is null");
-          return; // Прерываем, если нет основного элемента окна
+          return;
         }
     }
     gachaPullModalInstance.show();
-    // ------------------------
 
-    // --- Генерация данных карт --- 
-    lastPulledCardsData = []; 
-    let duplicates = [];
-    let pulledCardsPromises = [];
-
-    // Создаем Set с УЖЕ использованными уникальными imgUrl ИЗ КОЛЛЕКЦИИ
-    // Обновляем этот Set перед каждым пуллом, чтобы он был актуален
-    const uniqueImageUrlsInCollection = new Set(
+    // --- Генерация данных карт (ПОСЛЕДОВАТЕЛЬНАЯ ОБРАБОТКА) ---
+    lastPulledCardsData = [];
+    
+    // Состояние уникальных артов из ГЛОБАЛЬНОЙ коллекции ДО начала этого пулла
+    const uniqueImageUrlsInGlobalCollection = new Set(
         Object.values(uniqueCards).map(card => card.imgUrl || card.img)
     );
+    
+    // Арты, которые были использованы для УНИКАЛЬНОЙ карты В ЭТОМ ПУЛЛЕ
+    let imageUrlsUsedForUniqueCardInThisBatch = new Set();
 
     for (let i = 0; i < times; i++) {
-        pulledCardsPromises.push((async () => {
-            let imgUrl;
-            let isUniqueImage = false;
-            let attempts = 0;
-            const maxImageAttempts = 50; // Лимит попыток найти уникальный арт
+        // 1. Получаем арт
+        // getRandomDanbooruImage уже пытается дать уникальный арт для каждой карты в пакете через usedLocalImages
+        const imgUrl = await getRandomDanbooruImage();
 
-            // --- ЦИКЛ ПОИСКА УНИКАЛЬНОГО IMG URL --- 
-            do {
-                imgUrl = await getRandomDanbooruImage(); // Получаем путь к локальному изображению
+        if (!imgUrl) {
+            console.warn(`Пропуск карты ${i + 1} из-за отсутствия imgUrl.`);
+            // Можно добавить null в lastPulledCardsData или просто пропустить, 
+            // чтобы в lastPulledCardsData были только успешно созданные карты
+            continue; 
+        }
 
-                if (!imgUrl) {
-                    // Если getRandomDanbooruImage вернул null (все картинки недоступны/использованы в сессии)
-                    attempts++;
-                    console.warn(`getRandomDanbooruImage вернул null на попытке ${attempts}`);
-                    if (attempts >= maxImageAttempts) break; // Прерываем цикл, если не можем получить URL
-                    continue; // Пробуем получить другой URL
-                }
+        // 2. Генерируем характеристики, имя и т.д.
+        const rarity = getRandomRarity();
+        const maxStat = rarity * 20;
+        const power = Math.floor(Math.random() * maxStat) + 1;
+        const beauty = Math.floor(Math.random() * maxStat) + 1;
+        const charisma = Math.floor(Math.random() * maxStat) + 1;
+        const vocal = Math.floor(Math.random() * maxStat) + 1;
+        
+        const uniqueName = generateUniqueName(imgUrl, rarity, power, beauty, charisma, vocal);
+        // cardKey все еще полезен, если мы хотим хранить карты с одинаковым imgUrl (не уникальные) 
+        // в общем `collection` с разными статами, или для ID.
+        const cardKey = generateCardKey(imgUrl, rarity, power, beauty, charisma, vocal);
 
-                // Проверяем, используется ли этот imgUrl в УЖЕ СОБРАННОЙ уникальной коллекции
-                if (!uniqueImageUrlsInCollection.has(imgUrl)) {
-                    isUniqueImage = true; // Нашли! Этот арт еще не использовался для уникальной карты.
-                } else {
-                    // Этот арт уже есть в uniqueCards, нужно пробовать другой
-                    attempts++;
-                    console.log(`Изображение ${imgUrl} уже есть в уникальной коллекции, попытка ${attempts}...`);
-                }
+        const char = {
+            id: cardKey, 
+            name: uniqueName,
+            rarity: rarity,
+            img: imgUrl,
+            imgUrl: imgUrl,
+            type: "miku",
+            power: power,
+            beauty: beauty,
+            charisma: charisma,
+            vocal: vocal,
+            description: "A unique Miku character."
+        };
 
-            } while (!isUniqueImage && attempts < maxImageAttempts);
-            // --- КОНЕЦ ЦИКЛА ПОИСКА --- 
+        // 3. Всегда добавляем карту в общую коллекцию (collection)
+        collection.push(char);
 
-            if (!isUniqueImage) {
-                console.error(`Не удалось найти уникальный URL изображения после ${maxImageAttempts} попыток.`);
-                // Можно либо вернуть null, либо попробовать использовать дубликат арта, но с другими статами?
-                // Пока просто вернем null, чтобы пропустить генерацию этой карты.
-                return null; 
-            }
-
-            // Теперь, когда у нас есть УНИКАЛЬНЫЙ imgUrl, генерируем остальное
-            const rarity = getRandomRarity();
-            const maxStat = rarity * 20;
-            const power = Math.floor(Math.random() * maxStat) + 1;
-            const beauty = Math.floor(Math.random() * maxStat) + 1;
-            const charisma = Math.floor(Math.random() * maxStat) + 1;
-            const vocal = Math.floor(Math.random() * maxStat) + 1;
+        // 4. Определяем, должна ли эта карта попасть в коллекцию УНИКАЛЬНЫХ АРТОВ (uniqueCards)
+        // Условие: арт еще не встречался в глобальной коллекции уникальных артов
+        // И арт еще не был использован для другой уникальной карты В ЭТОМ ПУЛЛЕ
+        if (!uniqueImageUrlsInGlobalCollection.has(imgUrl) && 
+            !imageUrlsUsedForUniqueCardInThisBatch.has(imgUrl)) {
             
-            // Генерируем ПОЛНЫЙ ключ карты (включая статы)
-            const cardKey = generateCardKey(imgUrl, rarity, power, beauty, charisma, vocal);
-
-            // Финальная проверка на ОЧЕНЬ маловероятную коллизию полного ключа
-            if (uniqueCards[cardKey]) {
-                 console.warn(`Полная коллизия ключа для ${cardKey} (арт ${imgUrl}), пропускаем.`);
-                 // Теоретически, мы могли бы здесь перегенерировать только статы, 
-                 // но для простоты пропустим эту карту.
-                 return null;
-            }
-
-            const uniqueName = generateUniqueName(imgUrl, rarity, power, beauty, charisma, vocal);
-
-            const char = {
-                name: uniqueName,
-                rarity: rarity,
-                img: imgUrl, 
-                imgUrl: imgUrl,
-                type: "miku",
-                power: power,
-                beauty: beauty,
-                charisma: charisma,
-                vocal: vocal,
-                description: "A unique Miku character."
-            };
-
-            // Добавляем в общую коллекцию (включая дубликаты)
-            collection.push(char);
+            uniqueCards[imgUrl] = char; // Ключом в uniqueCards теперь будет сам imgUrl для строгой уникальности арта
+            imageUrlsUsedForUniqueCardInThisBatch.add(imgUrl); // Отмечаем арт как использованный для уникальной карты в этом пакете
             
-            // Добавляем в УНИКАЛЬНУЮ коллекцию и трекер уникальных URL
-            // Эта проверка теперь почти избыточна после проверки выше, но оставим для надежности
-            if (!uniqueCards[cardKey]) {
-                uniqueCards[cardKey] = char;
-                uniqueImageUrlsInCollection.add(imgUrl); // <-- ВАЖНО: Обновляем Set использованных URL
-            } else {
-                duplicates.push(char);
-            }
-            return char; 
-        })());
+            console.log(`Добавлена УНИКАЛЬНАЯ карта (Арт: ${imgUrl}, Имя: ${uniqueName}) в uniqueCards.`);
+        } else {
+            console.log(`Арт ${imgUrl} уже использован для уникальной карты (глобально или в этом пакете). Карта '${uniqueName}' добавлена только в общую коллекцию.`);
+        }
+        
+        lastPulledCardsData.push(char); // Добавляем в список карт этого пулла для отображения в модалке
     }
+    // --- Конец генерации карт ---
 
-    const results = await Promise.all(pulledCardsPromises);
-    lastPulledCardsData = results.filter(card => card !== null); 
-  // --------------------------- 
+    // --- Отображение в модальном окне ---
+    if (spinner) spinner.style.display = 'none';
+    if (modalMessage) modalMessage.textContent = `Pull complete! You got ${lastPulledCardsData.filter(c => c !== null).length} card(s).`;
 
-  // --- Отображение в модальном окне --- 
-  // Перепроверяем элементы перед использованием
-  if (spinner) {
-    spinner.style.display = 'none'; // Скрываем спиннер
-  }
-  if (modalMessage) {
-    modalMessage.textContent = `Pull complete! You got ${lastPulledCardsData.length} card(s).`;
-  }
-  
-  displayPulledCards(lastPulledCardsData, 'gachaPullModalResults'); 
+    displayPulledCards(lastPulledCardsData.filter(c => c !== null), 'gachaPullModalResults');
 
-  if (collectButton) {
-    collectButton.disabled = false; // Активируем кнопку "Забрать"
-  }
+    if (collectButton) collectButton.disabled = false;
 }
 
   // Добавляем обработчик на кнопку "Забрать"
@@ -1349,20 +1300,20 @@ function showHome() {
     if (collectButton) {
         collectButton.addEventListener('click', function() {
             if (lastPulledCardsData.length > 0) {
-                // Отображаем карты
-                displayPulledCards(lastPulledCardsData);
-                
+                // Отображаем карты в основном контейнере
+                displayPulledCards(lastPulledCardsData, 'gachaResults'); // <-- Добавляем ID контейнера
+
                 // Обновляем счетчики и коллекцию
                 updateCollection();
-                updateCollectionCounter(); 
+                updateCollectionCounter();
                 updateTycoonStats(); // Обновляем все статы, включая гемы
             }
-            
+
             // Закрываем модальное окно
             if (gachaPullModalInstance) {
                 gachaPullModalInstance.hide();
             }
-            
+
             // Очищаем временные данные
             lastPulledCardsData = [];
         });
