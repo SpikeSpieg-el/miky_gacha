@@ -49,17 +49,10 @@
   </style>
 </head>
 <body>
-  <!-- Мерцающие звезды для фона -->
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
+  <!-- Parallax Background Container -->
+  <div class="parallax-bg">
+    <!-- Stars will be dynamically added here by JavaScript -->
+  </div>
 
   <!-- Новый хедер с лого -->
   <header class="fixed-top bg-dark bg-opacity-75 py-2">
@@ -165,19 +158,19 @@
     
     <!-- Боковое меню (изначально скрыто) -->
     <div id="sideMenu">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="m-0">Menu</h4>
+      <div class="side-menu-header">
+        <h4 class="side-menu-title">Menu</h4>
         <button class="btn-close btn-close-white" onclick="toggleMenu()"></button>
       </div>
       <div class="nav flex-column">
-        <button class="nav-link" onclick="showHome(); toggleMenu();">Home</button>
-        <button class="nav-link" onclick="showGachaSystem(); toggleMenu();">Gacha</button>
-        <button class="nav-link" onclick="showCollection(); toggleMenu();">Collection</button>
-        <button class="nav-link" onclick="showTycoon(); toggleMenu();">Tycoon</button>
-        <button class="nav-link" onclick="showNews(); toggleMenu();">News</button>
-        <button class="nav-link" onclick="showShop(); toggleMenu();">Shop</button>
-        <button class="nav-link" onclick="showEvents(); toggleMenu();">Events</button>
-        <button class="nav-link" onclick="showProfile(); toggleMenu();">Profile</button>
+        <button class="nav-link" onclick="showHome(); toggleMenu();"><i class="fas fa-home"></i>Home</button>
+        <button class="nav-link" onclick="showGachaSystem(); toggleMenu();"><i class="fas fa-dice"></i>Gacha</button>
+        <button class="nav-link" onclick="showCollection(); toggleMenu();"><i class="fas fa-images"></i>Collection</button>
+        <button class="nav-link" onclick="showTycoon(); toggleMenu();"><i class="fas fa-briefcase"></i>Tycoon</button>
+        <button class="nav-link" onclick="showNews(); toggleMenu();"><i class="fas fa-newspaper"></i>News</button>
+        <button class="nav-link" onclick="showShop(); toggleMenu();"><i class="fas fa-store"></i>Shop</button>
+        <button class="nav-link" onclick="showEvents(); toggleMenu();"><i class="fas fa-calendar-alt"></i>Events</button>
+        <button class="nav-link" onclick="showProfile(); toggleMenu();"><i class="fas fa-user-circle"></i>Profile</button>
       </div>
     </div>
     
@@ -478,37 +471,8 @@
     <!-- Новости (изначально скрыты) -->
     <div id="newsSection" style="display: none;">
       <h2 class="mb-4">News & Updates</h2>
-      
-      <div class="feature-box mb-4">
-        <h3 class="feature-title">New Event: Summer Festival</h3>
-        <p class="news-date">APR 22, 2024</p>
-        <div class="mb-3">
-          <p>Join our summer festival event and get exclusive Miku summer cards! The event will run for 2 weeks.</p>
-          <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Summer Event" class="img-fluid rounded mb-3" style="max-height: 300px;">
-          <button class="feature-button" onclick="showEvents()">Join Event</button>
-        </div>
-      </div>
-      
-      <div class="feature-box mb-4">
-        <h3 class="feature-title">System Update 1.2</h3>
-        <p class="news-date">APR 15, 2024</p>
-        <div class="mb-3">
-          <p>We've updated our gacha system with new card animations and improved drop rates!</p>
-          <ul>
-            <li>New limited edition cards added</li>
-            <li>Improved gacha animations</li>
-            <li>Fixed bugs in tycoon mode</li>
-            <li>Added new events system</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="feature-box">
-        <h3 class="feature-title">Upcoming Collaborations</h3>
-        <p class="news-date">APR 10, 2024</p>
-        <div class="mb-3">
-          <p>Stay tuned for upcoming collaborations with other popular characters!</p>
-        </div>
+      <div id="dynamicNewsContainer">
+        <!-- News items will be dynamically inserted here -->
       </div>
     </div>
     
@@ -582,71 +546,8 @@
     <!-- События (изначально скрыты) -->
     <div id="eventsSection" style="display: none;">
       <h2 class="mb-4">Events</h2>
-      
-      <div class="feature-box mb-4">
-        <div class="row">
-          <div class="col-md-4">
-            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Summer Event" class="img-fluid rounded">
-          </div>
-          <div class="col-md-8">
-            <h3 class="feature-title">Summer Festival</h3>
-            <p class="news-date">APR 22 - MAY 6, 2024</p>
-            <p>Join our summer festival event and get exclusive Miku summer cards!</p>
-            <div class="progress mb-2">
-              <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
-            </div>
-            <p>Event Points: 250/1000</p>
-            <button class="feature-button">Participate</button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="feature-box mb-4">
-        <div class="row">
-          <div class="col-md-4">
-            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Daily Login" class="img-fluid rounded">
-          </div>
-          <div class="col-md-8">
-            <h3 class="feature-title">Daily Login Bonus</h3>
-            <p class="news-date">Ongoing</p>
-            <p>Log in daily to receive gems, tickets, and special items!</p>
-            <div class="d-flex justify-content-between mb-3">
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2 position-relative">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 1" class="img-fluid">
-                  <div class="position-absolute top-0 end-0 bg-success text-white p-1 rounded">✓</div>
-                </div>
-                <small>Day 1</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2 position-relative">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 2" class="img-fluid">
-                  <div class="position-absolute top-0 end-0 bg-success text-white p-1 rounded">✓</div>
-                </div>
-                <small>Day 2</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 3" class="img-fluid">
-                </div>
-                <small>Day 3</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 4" class="img-fluid">
-                </div>
-                <small>Day 4</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 5" class="img-fluid">
-                </div>
-                <small>Day 5</small>
-              </div>
-            </div>
-            <button class="feature-button">Claim Today's Reward</button>
-          </div>
-        </div>
+      <div id="dynamicEventsContainer">
+        <!-- Event items will be dynamically inserted here -->
       </div>
     </div>
     

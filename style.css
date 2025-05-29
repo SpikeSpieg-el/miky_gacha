@@ -118,12 +118,34 @@
     background-color: #333;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
     z-index: 1100;
-    transition: right 0.3s ease-in-out;
+    transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease-out; /* Smoother transition */
     padding: 20px;
+    background: linear-gradient(to bottom, rgba(var(--primary-color-rgb), 0.95), rgba(var(--dark-color-rgb), 0.95)); /* Thematic gradient */
+    backdrop-filter: blur(8px); /* Frosted glass effect */
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+    opacity: 0; /* Hidden by default for fade animation */
   }
   
   #sideMenu.active {
     right: 0;
+    opacity: 1; /* Fade in when active */
+  }
+  
+  #sideMenu .side-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  #sideMenu .side-menu-title {
+    font-size: 1.8rem;
+    color: var(--accent-color);
+    margin: 0;
+    font-weight: bold;
   }
   
   #sideMenu .btn-close {
@@ -145,22 +167,54 @@
     background-color: transparent;
     border: none;
     color: white;
-    font-size: 1.1rem;
-    padding: 10px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s, color 0.3s;
+    font-size: 1.2rem; /* Slightly larger */
+    padding: 12px 20px; /* More padding */
+    border-radius: 8px; /* Softer radius */
+    transition: background-color 0.3s, color 0.3s, transform 0.2s ease-out;
     cursor: pointer;
+    position: relative; /* For pseudo-elements */
+    overflow: hidden; /* For ripple effect */
+  }
+
+  #sideMenu .nav-link i {
+    margin-right: 10px; /* Space between icon and text */
+    width: 20px; /* Align icons */
+    text-align: center;
   }
   
   #sideMenu .nav-link:hover {
     background-color: var(--accent-color);
     color: white;
+    transform: translateX(5px); /* Subtle shift on hover */
+    box-shadow: 0 2px 10px rgba(var(--accent-color-rgb), 0.3);
   }
   
   #sideMenu .nav-link.active {
     background-color: var(--accent-color);
     color: white;
+    font-weight: bold;
+    box-shadow: inset 3px 0 0 var(--light-color); /* Left border highlight */
   }
+
+  /* Animation for menu items appearing */
+  #sideMenu.active .nav-link {
+    animation: menuItemFadeIn 0.5s ease-out forwards;
+    opacity: 0; /* Start hidden for animation */
+  }
+
+  @keyframes menuItemFadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Stagger animation for menu items */
+  /* This will be handled by JS by adding delays inline or via specific classes if preferred */
   
   .container {
     padding-top: 80px;
@@ -1144,29 +1198,61 @@
 
   /* Добавляем мерцающие звезды на фоне */
   @keyframes twinkle {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .parallax-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -2;
+    perspective: 1000px; /* Add perspective for 3D effect */
   }
 
   .star {
-    position: fixed;
+    position: absolute; /* Changed from fixed to absolute for parallax */
     background-color: #fff;
     border-radius: 50%;
-    z-index: -2;
     pointer-events: none;
     opacity: 0;
+    animation-name: twinkle;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
   }
 
-  .star:nth-child(1) { width: 2px; height: 2px; top: 10%; left: 20%; animation: twinkle 3s infinite 0.1s; }
-  .star:nth-child(2) { width: 3px; height: 3px; top: 20%; left: 40%; animation: twinkle 4s infinite 0.5s; }
-  .star:nth-child(3) { width: 1px; height: 1px; top: 30%; left: 60%; animation: twinkle 5s infinite 1.2s; }
-  .star:nth-child(4) { width: 2px; height: 2px; top: 40%; left: 80%; animation: twinkle 3.5s infinite 0.8s; }
-  .star:nth-child(5) { width: 2px; height: 2px; top: 50%; left: 10%; animation: twinkle 4.5s infinite 1.5s; }
-  .star:nth-child(6) { width: 3px; height: 3px; top: 60%; left: 30%; animation: twinkle 3s infinite 0.3s; }
-  .star:nth-child(7) { width: 1px; height: 1px; top: 70%; left: 50%; animation: twinkle 5s infinite 1.8s; }
-  .star:nth-child(8) { width: 2px; height: 2px; top: 80%; left: 70%; animation: twinkle 4s infinite 0.7s; }
-  .star:nth-child(9) { width: 3px; height: 3px; top: 90%; left: 90%; animation: twinkle 3.5s infinite 1.1s; }
-  .star:nth-child(10) { width: 2px; height: 2px; top: 15%; left: 85%; animation: twinkle 4.5s infinite 2.0s; }
+  /* Define different layers for parallax effect */
+  .star-layer1 {
+    /* Farthest stars - smaller, slower, less parallax effect */
+    transform: translateZ(-300px);
+  }
+
+  .star-layer2 {
+    /* Middle stars */
+    transform: translateZ(-200px);
+  }
+
+  .star-layer3 {
+    /* Closest stars - larger, faster, more parallax effect */
+    transform: translateZ(-100px);
+  }
+
+  /* Example star definitions - will be expanded in JS for randomness */
+  /* These are just placeholders now, JS will generate more stars */
+  .star:nth-child(1) { width: 1px; height: 1px; top: 10%; left: 20%; animation-duration: 3s; animation-delay: 0.1s; }
+  .star:nth-child(2) { width: 2px; height: 2px; top: 20%; left: 40%; animation-duration: 4s; animation-delay: 0.5s; }
+  .star:nth-child(3) { width: 1px; height: 1px; top: 30%; left: 60%; animation-duration: 5s; animation-delay: 1.2s; }
+  .star:nth-child(4) { width: 2px; height: 2px; top: 40%; left: 80%; animation-duration: 3.5s; animation-delay: 0.8s; }
+  .star:nth-child(5) { width: 1px; height: 1px; top: 50%; left: 10%; animation-duration: 4.5s; animation-delay: 1.5s; }
+  .star:nth-child(6) { width: 2px; height: 2px; top: 60%; left: 30%; animation-duration: 3s; animation-delay: 0.3s; }
+  .star:nth-child(7) { width: 1px; height: 1px; top: 70%; left: 50%; animation-duration: 5s; animation-delay: 1.8s; }
+  .star:nth-child(8) { width: 2px; height: 2px; top: 80%; left: 70%; animation-duration: 4s; animation-delay: 0.7s; }
+  .star:nth-child(9) { width: 1px; height: 1px; top: 90%; left: 90%; animation-duration: 3.5s; animation-delay: 1.1s; }
+  .star:nth-child(10) { width: 2px; height: 2px; top: 15%; left: 85%; animation-duration: 4.5s; animation-delay: 2.0s; }
+
   /* Стили для нового хедера */
   .header-logo {
     transition: transform 0.3s;
@@ -1189,3 +1275,117 @@
   .container.py-4 {
     padding-top: 80px !important;
   }
+
+/* --- Dynamic News and Events Styling --- */
+
+/* News Section Specifics */
+#dynamicNewsContainer .feature-box {
+  background-color: rgba(0, 0, 0, 0.4); /* Slightly different background for news items */
+  border-left: 3px solid var(--secondary-color); /* Accent border */
+}
+
+#dynamicNewsContainer .feature-title {
+  color: var(--secondary-color); /* Accent color for news titles */
+  font-size: 1.6rem; /* Slightly smaller title for news items */
+}
+
+#dynamicNewsContainer .news-date {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6); /* Lighter date text */
+  margin-bottom: 0.75rem;
+}
+
+#dynamicNewsContainer img {
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  max-height: 300px; /* Control image height */
+  width: 100%;
+  object-fit: cover; /* Ensure image covers the area well */
+}
+
+#dynamicNewsContainer p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+#dynamicNewsContainer .feature-button {
+  background-color: var(--secondary-color); /* Match border accent */
+  font-size: 1rem;
+  padding: 8px 25px;
+}
+#dynamicNewsContainer .feature-button:hover {
+  background-color: var(--accent-color);
+}
+
+
+/* Events Section Specifics */
+#dynamicEventsContainer .feature-box {
+  background-color: rgba(var(--accent-color-rgb), 0.1); /* Use accent color with alpha for event items */
+  border: 1px solid rgba(var(--accent-color-rgb), 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#dynamicEventsContainer .feature-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(var(--accent-color-rgb), 0.2);
+}
+
+#dynamicEventsContainer .feature-title {
+  color: var(--accent-color); /* Accent color for event titles */
+  font-size: 1.7rem; 
+}
+
+#dynamicEventsContainer .news-date { /* Reusing .news-date for event date ranges */
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+}
+
+#dynamicEventsContainer .event-image-container img {
+  border-radius: 8px;
+  width: 100%;
+  height: 200px; /* Fixed height for event banners */
+  object-fit: cover;
+  margin-bottom: 1rem; /* Add margin for mobile view */
+}
+
+#dynamicEventsContainer p { /* For event description */
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#dynamicEventsContainer .progress {
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  margin-top: 0.5rem;
+}
+
+#dynamicEventsContainer .progress-bar {
+  background-color: var(--accent-color);
+  font-weight: bold;
+  font-size: 0.8rem;
+  line-height: 20px; /* Center text vertically */
+}
+
+#dynamicEventsContainer .feature-button {
+  background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+  font-size: 1.1rem;
+  margin-top: 1rem; /* Add some space above button */
+}
+
+/* Responsive adjustments for events section images */
+@media (max-width: 767px) {
+  #dynamicEventsContainer .event-image-container img {
+    margin-bottom: 1rem; /* Ensure space between image and text on mobile */
+  }
+  #dynamicEventsContainer .feature-box .row > div[class^="col-md-"] {
+     text-align: center; /* Center content on mobile */
+  }
+   #dynamicEventsContainer .feature-title, #dynamicEventsContainer .news-date {
+    text-align: center;
+   }
+}
