@@ -1928,51 +1928,9 @@ function showHome() {
   // --- End Starry Parallax Background ---
 
   // Добавляем обработчик для кнопки объяснения характеристик
-  const showStatsInfoBtn = document.getElementById('showStatsInfoBtn');
-  if (showStatsInfoBtn) {
-    showStatsInfoBtn.addEventListener('click', function() {
-      // Создаем модальное окно с объяснением характеристик
-      const statsInfoModal = document.createElement('div');
-      // ... (rest of the modal creation code)
-      statsInfoModal.className = 'modal fade';
-      statsInfoModal.id = 'statsInfoModal';
-      statsInfoModal.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Объяснение характеристик</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <p><strong>Характеристики персонажей:</strong></p>
-              <ul class="stats-explanation">
-                <li><strong>P (Power/Сила)</strong>: Определяет общую эффективность персонажа в команде и влияет на успех выступлений. Чем выше сила, тем больше влияние персонажа на команду.</li>
-                <li><strong>B (Beauty/Красота)</strong>: Влияет на внешнюю привлекательность выступлений и способность привлекать определенную аудиторию. Персонажи с высокой красотой создают более зрелищные выступления.</li>
-                <li><strong>C (Charisma/Харизма)</strong>: Напрямую влияет на привлечение фанатов и удержание аудитории. Персонажи с высокой харизмой привлекают больше фанатов после выступлений.</li>
-                <li><strong>V (Vocal/Вокал)</strong>: Определяет качество создаваемых песен и их популярность. Хороший вокал позволяет создавать более успешные треки.</li>
-              </ul>
-              <div class="mt-3">
-                <p><strong>Как использовать характеристики:</strong></p>
-                <ul>
-                  <li>Для создания хороших песен выбирайте персонажей с высоким значением Vocal</li>
-                  <li>Для успешных концертов важна комбинация Beauty и Power</li>
-                  <li>Для быстрого роста фан-базы ориентируйтесь на персонажей с высокой Charisma</li>
-                  <li>Сбалансированная команда с разными сильными сторонами даст лучшие результаты</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      document.body.appendChild(statsInfoModal);
-      const modal = new bootstrap.Modal(statsInfoModal);
-      modal.show();
-      statsInfoModal.addEventListener('hidden.bs.modal', function() {
-        document.body.removeChild(statsInfoModal);
-      });
-    });
-  }
+  // This was already correctly placed inside the DOMContentLoaded listener that handles various initializations.
+  // The error was that the content of this listener was duplicated here.
+  // The original DOMContentLoaded listener for showStatsInfoBtn is kept further down.
 
 // --- Sample Data for News and Events ---
 const sampleNewsData = [
@@ -2358,47 +2316,120 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 // --- End Basic Unit Tests ---
 
-const statsInfoModal = document.createElement('div');
-    statsInfoModal.className = 'modal fade';
-    statsInfoModal.id = 'statsInfoModal';
-    statsInfoModal.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Объяснение характеристик</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p><strong>Характеристики персонажей:</strong></p>
-            <ul class="stats-explanation">
-              <li><strong>P (Power/Сила)</strong>: Определяет общую эффективность персонажа в команде и влияет на успех выступлений. Чем выше сила, тем больше влияние персонажа на команду.</li>
-              <li><strong>B (Beauty/Красота)</strong>: Влияет на внешнюю привлекательность выступлений и способность привлекать определенную аудиторию. Персонажи с высокой красотой создают более зрелищные выступления.</li>
-              <li><strong>C (Charisma/Харизма)</strong>: Напрямую влияет на привлечение фанатов и удержание аудитории. Персонажи с высокой харизмой привлекают больше фанатов после выступлений.</li>
-              <li><strong>V (Vocal/Вокал)</strong>: Определяет качество создаваемых песен и их популярность. Хороший вокал позволяет создавать более успешные треки.</li>
-            </ul>
-            <div class="mt-3">
-              <p><strong>Как использовать характеристики:</strong></p>
-              <ul>
-                <li>Для создания хороших песен выбирайте персонажей с высоким значением Vocal</li>
-                <li>Для успешных концертов важна комбинация Beauty и Power</li>
-                <li>Для быстрого роста фан-базы ориентируйтесь на персонажей с высокой Charisma</li>
-                <li>Сбалансированная команда с разными сильными сторонами даст лучшие результаты</li>
-              </ul>
+// The following block was the cause of the syntax error.
+// It was a duplicate of the event listener for 'showStatsInfoBtn' and was also incomplete.
+// The original 'showStatsInfoBtn' listener is correctly placed within a DOMContentLoaded event.
+// Removing this entire duplicated and malformed block.
+
+// --- Event Listener Setup ---
+document.addEventListener('DOMContentLoaded', function() {
+  // Header buttons
+  const headerLogoLink = document.getElementById('headerLogoLink');
+  if (headerLogoLink) headerLogoLink.addEventListener('click', function(e) { e.preventDefault(); showHome(); });
+  
+  const headerMenuButton = document.getElementById('headerMenuButton');
+  if (headerMenuButton) headerMenuButton.addEventListener('click', toggleMenu);
+
+  // Home page buttons
+  const homePlayNowButton = document.getElementById('homePlayNowButton');
+  if (homePlayNowButton) homePlayNowButton.addEventListener('click', showGachaSystem);
+  
+  const homeShowCollectionButton = document.getElementById('homeShowCollectionButton');
+  if (homeShowCollectionButton) homeShowCollectionButton.addEventListener('click', showCollection);
+  
+  const homeShowNewsButton = document.getElementById('homeShowNewsButton');
+  if (homeShowNewsButton) homeShowNewsButton.addEventListener('click', showNews);
+  
+  const homeShowTycoonButton = document.getElementById('homeShowTycoonButton');
+  if (homeShowTycoonButton) homeShowTycoonButton.addEventListener('click', showTycoon);
+  
+  const homeShowGachaButton = document.getElementById('homeShowGachaButton');
+  if (homeShowGachaButton) homeShowGachaButton.addEventListener('click', showGachaSystem);
+
+  // Side Menu buttons
+  const sideMenuCloseButton = document.getElementById('sideMenuCloseButton');
+  if (sideMenuCloseButton) sideMenuCloseButton.addEventListener('click', toggleMenu);
+
+  const navHome = document.getElementById('navHome');
+  if (navHome) navHome.addEventListener('click', function() { showHome(); toggleMenu(); });
+  
+  const navGacha = document.getElementById('navGacha');
+  if (navGacha) navGacha.addEventListener('click', function() { showGachaSystem(); toggleMenu(); });
+  
+  const navCollection = document.getElementById('navCollection');
+  if (navCollection) navCollection.addEventListener('click', function() { showCollection(); toggleMenu(); });
+  
+  const navTycoon = document.getElementById('navTycoon');
+  if (navTycoon) navTycoon.addEventListener('click', function() { showTycoon(); toggleMenu(); });
+  
+  const navNews = document.getElementById('navNews');
+  if (navNews) navNews.addEventListener('click', function() { showNews(); toggleMenu(); });
+  
+  const navShop = document.getElementById('navShop');
+  if (navShop) navShop.addEventListener('click', function() { showShop(); toggleMenu(); });
+  
+  const navEvents = document.getElementById('navEvents');
+  if (navEvents) navEvents.addEventListener('click', function() { showEvents(); toggleMenu(); });
+  
+  const navProfile = document.getElementById('navProfile');
+  if (navProfile) navProfile.addEventListener('click', function() { showProfile(); toggleMenu(); });
+
+  // Character Detail Modal - Stats Info Button
+  const showStatsInfoBtn = document.getElementById('showStatsInfoBtn');
+  if (showStatsInfoBtn) {
+    showStatsInfoBtn.addEventListener('click', function() {
+      // Check if the modal instance for stats info already exists or needs creation
+      // This assumes 'statsInfoModalInstance' is a global or appropriately scoped variable
+      // For simplicity, we'll try to get or create it.
+      let statsModal = bootstrap.Modal.getInstance(document.getElementById('statsInfoModalInstance'));
+      if (!statsModal) {
+          const statsInfoModalDiv = document.createElement('div');
+          statsInfoModalDiv.className = 'modal fade';
+          statsInfoModalDiv.id = 'statsInfoModalInstance'; // Use a consistent ID
+          statsInfoModalDiv.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Объяснение характеристик</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <p><strong>Характеристики персонажей:</strong></p>
+                  <ul class="stats-explanation">
+                    <li><strong>P (Power/Сила)</strong>: Определяет общую эффективность персонажа в команде и влияет на успех выступлений. Чем выше сила, тем больше влияние персонажа на команду.</li>
+                    <li><strong>B (Beauty/Красота)</strong>: Влияет на внешнюю привлекательность выступлений и способность привлекать определенную аудиторию. Персонажи с высокой красотой создают более зрелищные выступления.</li>
+                    <li><strong>C (Charisma/Харизма)</strong>: Напрямую влияет на привлечение фанатов и удержание аудитории. Персонажи с высокой харизмой привлекают больше фанатов после выступлений.</li>
+                    <li><strong>V (Vocal/Вокал)</strong>: Определяет качество создаваемых песен и их популярность. Хороший вокал позволяет создавать более успешные треки.</li>
+                  </ul>
+                  <div class="mt-3">
+                    <p><strong>Как использовать характеристики:</strong></p>
+                    <ul>
+                      <li>Для создания хороших песен выбирайте персонажей с высоким значением Vocal</li>
+                      <li>Для успешных концертов важна комбинация Beauty и Power</li>
+                      <li>Для быстрого роста фан-базы ориентируйтесь на персонажей с высокой Charisma</li>
+                      <li>Сбалансированная команда с разными сильными сторонами даст лучшие результаты</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Добавляем модальное окно в DOM
-    document.body.appendChild(statsInfoModal);
-    
-    // Показываем модальное окно
-    const modal = new bootstrap.Modal(statsInfoModal);
-    modal.show();
-    
-    // Удаляем модальное окно после закрытия
-    statsInfoModal.addEventListener('hidden.bs.modal', function() {
-      document.body.removeChild(statsInfoModal);
+          `;
+          document.body.appendChild(statsInfoModalDiv);
+          statsModal = new bootstrap.Modal(statsInfoModalDiv);
+          statsInfoModalDiv.addEventListener('hidden.bs.modal', function() {
+            document.body.removeChild(statsInfoModalDiv); // Clean up modal from DOM after it's hidden
+          });
+      }
+      statsModal.show();
     });
-  });
+  }
+    // Ensure other initializations like tycoon system, collection counter updates, etc.,
+    // are also within a DOMContentLoaded if they manipulate DOM elements.
+    // Many are already called from functions like showTycoon, showCollection, etc.
+    // The existing DOMContentLoaded for tests is fine.
+    // The one for animateElementsOnLoad and parallax is also fine.
+    // The one for ticketPriceSlider is also fine.
+    // The one for saveTeamButton is fine.
+    // The one for collectGachaButton is fine.
+});
+// --- End Event Listener Setup ---
