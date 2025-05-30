@@ -2145,9 +2145,8 @@ function testRenderNews() {
   let failCount = 0;
 
   // Test 1: Empty array
-  setupTestContainer(containerId);
+  let newsContainer = setupTestContainer(containerId); // Use let and assign
   renderNews([], containerId);
-  const newsContainer = document.getElementById(containerId);
   if (assertEqual(newsContainer.children.length, 0, "Test 1: Renders no items for empty array")) {
     passCount++;
   } else {
@@ -2156,7 +2155,7 @@ function testRenderNews() {
   cleanupTestContainer(containerId);
 
   // Test 2: With sample data
-  setupTestContainer(containerId);
+  newsContainer = setupTestContainer(containerId); // Re-assign after setup
   const sampleNews = [
     { title: "News 1", date: "Date 1", content: "Content 1", imageUrl: "img1.jpg", buttonText: "Read More" },
     { title: "News 2", date: "Date 2", content: "Content 2" }
@@ -2218,9 +2217,8 @@ function testRenderEvents() {
   let failCount = 0;
 
   // Test 1: Empty array
-  setupTestContainer(containerId);
+  let eventsContainer = setupTestContainer(containerId); // Use let and assign
   renderEvents([], containerId);
-  const eventsContainer = document.getElementById(containerId);
   if (assertEqual(eventsContainer.children.length, 0, "Test 1: Renders no items for empty array")) {
     passCount++;
   } else {
@@ -2229,7 +2227,7 @@ function testRenderEvents() {
   cleanupTestContainer(containerId);
 
   // Test 2: With sample data
-  setupTestContainer(containerId);
+  eventsContainer = setupTestContainer(containerId); // Re-assign after setup
   const sampleEvents = [
     { title: "Event 1", dateRange: "Dates 1", description: "Desc 1", imageUrl: "event1.jpg", progress: 50, progressText: "50/100", buttonText: "Join" },
     { title: "Event 2", dateRange: "Dates 2", description: "Desc 2" }
