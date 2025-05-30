@@ -1,9 +1,14 @@
 :root {
     --primary-color: #008c99;
+    --primary-color-rgb: 0, 140, 153;
     --secondary-color: #e45bbb;
+    --secondary-color-rgb: 228, 91, 187;
     --dark-color: #006874;
+    --dark-color-rgb: 0, 104, 116;
     --light-color: #00c1d0;
+    --light-color-rgb: 0, 193, 208;
     --accent-color: #ff79c6;
+    --accent-color-rgb: 255, 121, 198;
   }
   
   /* Анимированный фон */
@@ -22,7 +27,7 @@
   
   
   body {
-    background: var(--dark-color); /* Заменяем градиент на один цвет */
+    /* background: var(--dark-color); */ /* Replaced by parallax background */
     color: #fff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     position: relative;
@@ -371,12 +376,211 @@
   .gacha-animation {
     animation: pop-in 0.6s ease-in-out;
   }
-  
-  .modal-content {
-    background-color: var(--primary-color);
+
+/* --- General Modal Styling --- */
+.modal-content {
+  background-color: rgba(var(--dark-color-rgb), 0.9); /* Dark, slightly transparent background */
+  color: #fff; /* White text */
+  border: 1px solid rgba(var(--accent-color-rgb), 0.3);
+  border-radius: 15px; /* Consistent border radius */
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px); /* Frosted glass effect for modals */
+}
+
+.modal-header {
+  background-color: rgba(var(--primary-color-rgb), 0.7); /* Thematic header */
+  color: var(--accent-color);
+  border-bottom: 1px solid rgba(var(--accent-color-rgb), 0.5);
+  border-top-left-radius: 14px; /* Match content radius */
+  border-top-right-radius: 14px;
+}
+
+.modal-header .modal-title {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.modal-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%); /* Make default Bootstrap close button white */
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(var(--accent-color-rgb), 0.3);
+  padding: 1rem;
+  background-color: rgba(var(--dark-color-rgb), 0.5); /* Slightly different footer bg */
+  border-bottom-left-radius: 14px; /* Match content radius */
+  border-bottom-right-radius: 14px;
+}
+
+/* Style buttons in modals like feature buttons */
+.modal .btn-primary {
+  background: linear-gradient(to right, var(--secondary-color), var(--accent-color));
+  border: none;
+  border-radius: 50px;
+  padding: 10px 30px;
+  font-weight: bold;
+  box-shadow: 0 0 15px rgba(var(--accent-color-rgb), 0.3);
+  transition: all 0.3s ease;
+}
+.modal .btn-primary:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 5px 20px rgba(var(--accent-color-rgb), 0.5);
+}
+
+.modal .btn-secondary {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 50px;
+  padding: 10px 30px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.modal .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- Gacha Pull Modal Specifics --- */
+#gachaPullModal .modal-dialog {
+  max-width: 800px; /* Wider for multiple cards */
+}
+
+#gachaPullModalMessage {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--light-color);
+}
+
+#gachaPullModalResults {
+  display: flex;
+  flex-wrap: wrap; /* Allow cards to wrap */
+  justify-content: center;
+  gap: 1rem; /* Spacing between cards */
+  min-height: 200px; /* Ensure space even when loading */
+}
+
+#gachaPullModalResults .gacha-card { /* Already styled, but ensure it works in flex */
+  width: calc(33.333% - 1rem); /* Approx 3 cards per row, considering gap */
+  min-width: 120px; /* Minimum card width */
+  margin-bottom: 1rem; /* Add some bottom margin */
+}
+
+@media (max-width: 768px) {
+  #gachaPullModalResults .gacha-card {
+    width: calc(50% - 1rem); /* 2 cards per row on medium screens */
   }
-  
-  .text-muted {
+}
+@media (max-width: 576px) {
+  #gachaPullModalResults .gacha-card {
+    width: calc(100% - 1rem); /* 1 card per row on small screens */
+  }
+}
+
+/* --- Character Detail Modal Specifics --- */
+#characterModal .modal-dialog {
+  max-width: 500px; /* Optimal width for single character details */
+}
+
+#characterModal #modalImage {
+  border: 3px solid var(--accent-color);
+  padding: 3px;
+  background-color: rgba(var(--accent-color-rgb), 0.1);
+}
+
+#characterModal #modalName {
+  color: var(--accent-color);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+#characterModal .rarity { /* This is likely a span with ★★★ */
+  font-size: 1.5rem;
+  color: gold;
+  text-shadow: 0 0 5px gold;
+}
+
+#characterModal .stats-bar { /* Bootstrap .progress class */
+  height: 18px;
+  background-color: rgba(0,0,0,0.4);
+  border-radius: 8px;
+  margin-top: 0.25rem;
+}
+#characterModal .stats-fill { /* Bootstrap .progress-bar class */
+  font-weight: bold;
+  font-size: 0.75rem;
+  line-height: 18px; /* Vertically center text */
+  border-radius: 8px;
+}
+/* Specific stat bar colors can be kept as they are (bg-danger, bg-info etc.) or themed: */
+#modalPowerBar { background-color: var(--secondary-color); }
+#modalBeautyBar { background-color: var(--light-color); }
+#modalCharismaBar { background-color: #ffc107; } /* Gold/Yellow for charisma */
+#modalVocalBar { background-color: var(--primary-color); }
+
+#characterModal h5 { /* "Stats", "Description" titles */
+  color: var(--secondary-color);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(var(--secondary-color-rgb),0.3);
+  padding-bottom: 0.25rem;
+}
+#characterModal #modalDescription {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.8);
+}
+
+/* --- Team Management Modal Specifics --- */
+#teamModal .modal-dialog {
+  max-width: 900px; /* Wider for team layout */
+}
+#teamModal h6 { /* "Current Team", "Your Collection" titles */
+  color: var(--accent-color);
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+#teamModal .team-slots .team-slot { /* Individual slot in current team */
+  background-color: rgba(var(--primary-color-rgb), 0.3);
+  border: 1px solid rgba(var(--primary-color-rgb), 0.5);
+  padding: 0.75rem;
+  border-radius: 10px;
+  transition: background-color 0.3s;
+}
+#teamModal .team-slots .team-slot:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.5);
+}
+#teamModal .team-slots .card-thumbnail { /* Already styled, but ensure it fits */
+  width: 50px; /* Smaller thumbnails in team slots */
+  height: 75px;
+}
+#teamModal .team-slots .card-thumbnail small {
+  font-size: 0.75rem;
+}
+#teamModal .team-slots .remove-member {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+}
+
+#teamModal .card-selection { /* Container for selectable cards */
+  max-height: 450px; /* Adjust height */
+  background-color: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+#teamModal .card-option { /* Individual card in selection list */
+  border-width: 3px; /* Thicker border for selection indication */
+}
+#teamModal .card-option.selected { /* Style for selected card in list */
+  border-color: var(--light-color);
+  box-shadow: 0 0 15px var(--light-color);
+}
+
+
+.text-muted {
     color: rgb(225 225 225 / 75%) !important;
   }
   
@@ -1209,49 +1413,65 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    z-index: -2;
-    perspective: 1000px; /* Add perspective for 3D effect */
+    z-index: -2; /* Keep this behind all other content */
+    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+    /* perspective: 1000px; /* Not needed for 2D background image parallax */
   }
 
-  .star {
-    position: absolute; /* Changed from fixed to absolute for parallax */
-    background-color: #fff;
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0;
-    animation-name: twinkle;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
+  /* Star animation keyframes */
+  @keyframes animateStars {
+    from { background-position: 0 0; }
+    to { background-position: 0 -10000px; } /* Large value for continuous scroll */
   }
 
-  /* Define different layers for parallax effect */
-  .star-layer1 {
-    /* Farthest stars - smaller, slower, less parallax effect */
-    transform: translateZ(-300px);
+  @keyframes animateStars2 {
+    from { background-position: 0 0; }
+    to { background-position: 0 -10000px; }
   }
 
-  .star-layer2 {
-    /* Middle stars */
-    transform: translateZ(-200px);
+  @keyframes animateStars3 {
+    from { background-position: 0 0; }
+    to { background-position: 0 -10000px; }
   }
 
-  .star-layer3 {
-    /* Closest stars - larger, faster, more parallax effect */
-    transform: translateZ(-100px);
+  /* Star layers styling */
+  #stars, #stars2, #stars3 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-repeat: repeat;
   }
 
-  /* Example star definitions - will be expanded in JS for randomness */
-  /* These are just placeholders now, JS will generate more stars */
-  .star:nth-child(1) { width: 1px; height: 1px; top: 10%; left: 20%; animation-duration: 3s; animation-delay: 0.1s; }
-  .star:nth-child(2) { width: 2px; height: 2px; top: 20%; left: 40%; animation-duration: 4s; animation-delay: 0.5s; }
-  .star:nth-child(3) { width: 1px; height: 1px; top: 30%; left: 60%; animation-duration: 5s; animation-delay: 1.2s; }
-  .star:nth-child(4) { width: 2px; height: 2px; top: 40%; left: 80%; animation-duration: 3.5s; animation-delay: 0.8s; }
-  .star:nth-child(5) { width: 1px; height: 1px; top: 50%; left: 10%; animation-duration: 4.5s; animation-delay: 1.5s; }
-  .star:nth-child(6) { width: 2px; height: 2px; top: 60%; left: 30%; animation-duration: 3s; animation-delay: 0.3s; }
-  .star:nth-child(7) { width: 1px; height: 1px; top: 70%; left: 50%; animation-duration: 5s; animation-delay: 1.8s; }
-  .star:nth-child(8) { width: 2px; height: 2px; top: 80%; left: 70%; animation-duration: 4s; animation-delay: 0.7s; }
-  .star:nth-child(9) { width: 1px; height: 1px; top: 90%; left: 90%; animation-duration: 3.5s; animation-delay: 1.1s; }
-  .star:nth-child(10) { width: 2px; height: 2px; top: 15%; left: 85%; animation-duration: 4.5s; animation-delay: 2.0s; }
+  #stars {
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Furthest */
+    background-size: 500px auto; /* Adjust size as needed */
+    animation: animateStars 240s linear infinite; /* Slowest */
+    z-index: 1; /* Inside .parallax-bg, above its background but behind stars2 */
+    opacity: 0.7;
+  }
+
+  #stars2 {
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Placeholder - medium */
+    /* background-image: url('star_medium.png'); */ /* Ideal: different star pattern */
+    background-size: 1000px auto; /* Adjust size as needed */
+    animation: animateStars2 160s linear infinite; /* Medium speed */
+    z-index: 2;
+    opacity: 0.5; /* Make it a bit more subtle if using same image */
+  }
+
+  #stars3 {
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Placeholder - closest */
+    /* background-image: url('star_fast.png'); */ /* Ideal: different, larger star pattern */
+    background-size: 1500px auto; /* Adjust size as needed */
+    animation: animateStars3 80s linear infinite; /* Fastest */
+    z-index: 3;
+    opacity: 0.3; /* Make it even more subtle if using same image */
+  }
 
   /* Стили для нового хедера */
   .header-logo {
@@ -1389,3 +1609,5 @@
     text-align: center;
    }
 }
+
+[end of style.css]
