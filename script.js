@@ -18,25 +18,26 @@ function showFeedback(message) {
 function showHome() {
     hideAllSections();
     document.getElementById('homeContent').style.display = 'block';
-    setActiveButton('showHome');
+    setActiveButton('navHome'); // Updated
   }
   
   function showGachaSystem() {
     hideAllSections();
     document.getElementById('gachaSystem').style.display = 'block';
-    setActiveButton('showGachaSystem');
+    setActiveButton('navGacha'); // Updated
   }
   
   function showCollection() {
     hideAllSections();
     document.getElementById('cardCollection').style.display = 'block';
     updateCollection();
+    setActiveButton('navCollection'); // Added
   }
   
   function showTycoon() {
     hideAllSections();
     document.getElementById('tycoonMode').style.display = 'block';
-    setActiveButton('showTycoon');
+    setActiveButton('navTycoon'); // Updated
     
     // Инициализируем тайкун-систему, если это первый показ
     initTycoonSystem();
@@ -45,21 +46,25 @@ function showHome() {
   function showNews() {
     hideAllSections();
     document.getElementById('newsSection').style.display = 'block';
+    setActiveButton('navNews'); // Added
   }
   
   function showShop() {
     hideAllSections();
     document.getElementById('shopSection').style.display = 'block';
+    setActiveButton('navShop'); // Added
   }
   
   function showEvents() {
     hideAllSections();
     document.getElementById('eventsSection').style.display = 'block';
+    setActiveButton('navEvents'); // Added
   }
   
   function showProfile() {
     hideAllSections();
     document.getElementById('profileSection').style.display = 'block';
+    setActiveButton('navProfile'); // Added
   }
   
   function hideAllSections() {
@@ -79,12 +84,15 @@ function showHome() {
   }
   
   // Функция для выделения активного раздела
-  function setActiveButton(buttonId) {
+  function setActiveButton(navButtonId) { // Parameter changed to navButtonId
     const buttons = document.querySelectorAll('#sideMenu .nav-link');
     buttons.forEach(button => button.classList.remove('active')); // Убираем активный класс у всех кнопок
-    const activeButton = document.querySelector(`#sideMenu .nav-link[onclick*="${buttonId}"]`);
+    // Используем getElementById для поиска кнопки по ее ID
+    const activeButton = document.getElementById(navButtonId); 
     if (activeButton) {
       activeButton.classList.add('active'); // Добавляем активный класс к текущей кнопке
+    } else {
+      console.warn(`setActiveButton: Button with ID "${navButtonId}" not found.`);
     }
   }
   
@@ -1496,6 +1504,7 @@ function showHome() {
   // Добавляем обработчики событий для клонированных элементов коллекции
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize stamina for any existing cards in collection (one-time setup for old data)
+    // AND SETUP MAIN APPLICATION EVENT LISTENERS
     if (typeof collection !== 'undefined' && Array.isArray(collection)) {
         collection.forEach(card => {
             if (card.maxStamina === undefined) card.maxStamina = 100;
@@ -1536,6 +1545,101 @@ function showHome() {
     
     // Инициализируем статистику тайкун-режима
     updateTycoonStats();
+
+    // Setup navigation event listeners from side menu
+    const navHomeButton = document.getElementById('navHome');
+    if (navHomeButton) navHomeButton.addEventListener('click', showHome);
+
+    const navGachaButton = document.getElementById('navGacha');
+    if (navGachaButton) navGachaButton.addEventListener('click', showGachaSystem);
+
+    const navCollectionButton = document.getElementById('navCollection');
+    if (navCollectionButton) navCollectionButton.addEventListener('click', showCollection);
+
+    const navTycoonButton = document.getElementById('navTycoon');
+    if (navTycoonButton) navTycoonButton.addEventListener('click', showTycoon);
+
+    const navNewsButton = document.getElementById('navNews');
+    if (navNewsButton) navNewsButton.addEventListener('click', showNews);
+
+    const navShopButton = document.getElementById('navShop');
+    if (navShopButton) navShopButton.addEventListener('click', showShop);
+
+    const navEventsButton = document.getElementById('navEvents');
+    if (navEventsButton) navEventsButton.addEventListener('click', showEvents);
+
+    const navProfileButton = document.getElementById('navProfile');
+    if (navProfileButton) navProfileButton.addEventListener('click', showProfile);
+
+    const sideMenuCloseButton = document.getElementById('sideMenuCloseButton');
+    if (sideMenuCloseButton) sideMenuCloseButton.addEventListener('click', toggleMenu);
+
+    // Home page buttons
+    const homePlayNowButton = document.getElementById('homePlayNowButton');
+    if (homePlayNowButton) homePlayNowButton.addEventListener('click', showGachaSystem); // Or any other relevant "play" action
+
+    const homeShowCollectionButton = document.getElementById('homeShowCollectionButton');
+    if (homeShowCollectionButton) homeShowCollectionButton.addEventListener('click', showCollection);
+    
+    const homeShowNewsButton = document.getElementById('homeShowNewsButton');
+    if (homeShowNewsButton) homeShowNewsButton.addEventListener('click', showNews);
+
+    const homeShowTycoonButton = document.getElementById('homeShowTycoonButton');
+    if (homeShowTycoonButton) homeShowTycoonButton.addEventListener('click', showTycoon);
+
+    const homeShowGachaButton = document.getElementById('homeShowGachaButton');
+    if (homeShowGachaButton) homeShowGachaButton.addEventListener('click', showGachaSystem);
+    
+    // Header buttons
+    const headerLogoLink = document.getElementById('headerLogoLink');
+    if (headerLogoLink) headerLogoLink.addEventListener('click', showHome);
+
+    const headerMenuButton = document.getElementById('headerMenuButton');
+    if (headerMenuButton) headerMenuButton.addEventListener('click', toggleMenu);
+
+    // Gacha System Buttons
+    const pullGacha1Button = document.getElementById('pullGacha1Button');
+    if (pullGacha1Button) pullGacha1Button.addEventListener('click', function() { pullGacha(1); });
+
+    const pullGacha10Button = document.getElementById('pullGacha10Button');
+    if (pullGacha10Button) pullGacha10Button.addEventListener('click', function() { pullGacha(10); });
+
+    const gachaGoToCollectionButton = document.getElementById('gachaGoToCollectionButton');
+    if (gachaGoToCollectionButton) gachaGoToCollectionButton.addEventListener('click', showCollection);
+
+    // Card Collection Buttons/Selects
+    const sortTypeSelect = document.getElementById('sortType');
+    if (sortTypeSelect) sortTypeSelect.addEventListener('change', updateCollection);
+
+    const sortButton = document.getElementById('sortButton');
+    if (sortButton) sortButton.addEventListener('click', updateCollection);
+
+    const collectionGoToGachaButton = document.getElementById('collectionGoToGachaButton');
+    if (collectionGoToGachaButton) collectionGoToGachaButton.addEventListener('click', showGachaSystem);
+
+    // Tycoon Mode Buttons
+    const upgradeStudioButton = document.getElementById('upgradeStudioButton');
+    if (upgradeStudioButton) upgradeStudioButton.addEventListener('click', upgradeStudio);
+
+    const collectDailyTasksButton = document.getElementById('collectDailyTasksButton');
+    if (collectDailyTasksButton) collectDailyTasksButton.addEventListener('click', collectDailyTasks);
+
+    const manageTeamButton = document.getElementById('manageTeamButton');
+    if (manageTeamButton) manageTeamButton.addEventListener('click', showTeamManagement);
+
+    const produceSongButton = document.getElementById('produceSongButton');
+    if (produceSongButton) produceSongButton.addEventListener('click', produceSong);
+
+    const startConcertButton = document.getElementById('startConcertButton');
+    if (startConcertButton) startConcertButton.addEventListener('click', startConcert);
+    
+    // Concert Results Modal Button
+    const shareConcertResultButton = document.getElementById('shareConcertResultButton');
+    if (shareConcertResultButton) shareConcertResultButton.addEventListener('click', shareConcertResult);
+
+    // Ensure UI is updated on load
+    showHome(); // Show home section by default
+    updateCollectionCounter(); // Update card counts etc.
   });
 
   // Функция для сбора наград за ежедневные задания
@@ -2150,8 +2254,13 @@ if (typeof assertEqual === 'undefined') {
 }
 
 // Example of how to call it (developer can uncomment this in console or add to a main test runner)
-// document.addEventListener('DOMContentLoaded', () => {
-//   if (typeof runAllStaminaTests === 'function') { // Check if function is defined
-//     // runAllStaminaTests(); // Call the tests after DOM is loaded
-//   }
-// });
+document.addEventListener('DOMContentLoaded', () => { // Made active
+  if (typeof runAllStaminaTests === 'function') { // Check if function is defined
+    try {
+      console.log("Attempting to run automated tests on DOMContentLoaded.");
+      runAllStaminaTests(); // Call the tests after DOM is loaded
+    } catch (e) {
+      console.error("Error during automated test execution on DOMContentLoaded:", e);
+    }
+  }
+});

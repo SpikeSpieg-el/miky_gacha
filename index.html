@@ -181,11 +181,11 @@
     <div id="gachaSystem" style="display: none;">
       <h1>🎤 Hatsune Miku Tycoon Gacha</h1>
         <div class="text-center mb-3">
-          <button class="btn btn-primary" onclick="pullGacha(1)">Pull x1 (10💎)</button>
-          <button class="btn btn-success" onclick="pullGacha(10)">Pull x10 (100💎)</button>
+          <button class="btn btn-primary" id="pullGacha1Button">Pull x1 (10💎)</button>
+          <button class="btn btn-success" id="pullGacha10Button">Pull x10 (100💎)</button>
         </div>
       <div class="text-center mb-3">
-        <button class="btn btn-secondary" onclick="showCollection()">Go to Collection</button>
+        <button class="btn btn-secondary" id="gachaGoToCollectionButton">Go to Collection</button>
       </div>
         <div id="gachaResults" class="row justify-content-center g-3"></div>
     </div>
@@ -196,7 +196,7 @@
         <div class="text-center mb-3">
           <label for="sortType" class="form-label">Сортировать по:</label>
           <div class="input-group justify-content-center">
-            <select id="sortType" class="form-select w-auto" onchange="updateCollection()">
+            <select id="sortType" class="form-select w-auto">
               <option value="none">Без сортировки</option>
               <option value="rarity">Редкость</option>
               <option value="power">Сила</option>
@@ -204,13 +204,13 @@
               <option value="charisma">Харизма</option>
               <option value="vocal">Вокал</option>
             </select>
-            <button class="btn btn-outline-secondary" type="button" onclick="updateCollection()">
+            <button class="btn btn-outline-secondary" type="button" id="sortButton">
               <i class="fas fa-sort"></i>
             </button>
           </div>
         </div>
       <div class="text-center mb-3">
-        <button class="btn btn-secondary" onclick="showGachaSystem()">Go to Gacha</button>
+        <button class="btn btn-secondary" id="collectionGoToGachaButton">Go to Gacha</button>
         </div>
         <ul class="nav nav-tabs" id="collectionTabs">
           <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#all">All</a></li>
@@ -279,7 +279,7 @@
             
             <div class="row mt-3">
               <div class="col-12">
-                <button class="feature-button" onclick="upgradeStudio()">
+                <button class="feature-button" id="upgradeStudioButton">
                   <i class="fas fa-arrow-up me-2"></i> Upgrade Studio (500💎)
                 </button>
               </div>
@@ -323,7 +323,7 @@
               </div>
             </div>
             
-            <button class="feature-button mt-3" onclick="collectDailyTasks()">
+            <button class="feature-button mt-3" id="collectDailyTasksButton">
               <i class="fas fa-check-circle me-2"></i> Collect Rewards
             </button>
           </div>
@@ -366,7 +366,7 @@
               </ul>
             </div>
             
-            <button class="feature-button mt-auto" onclick="showTeamManagement()">
+            <button class="feature-button mt-auto" id="manageTeamButton">
               <i class="fas fa-users me-2"></i> Manage Team
             </button>
           </div>
@@ -401,7 +401,7 @@
         </div>
       </div>
       
-            <button class="feature-button mt-auto" onclick="produceSong()">
+            <button class="feature-button mt-auto" id="produceSongButton">
               <i class="fas fa-music me-2"></i> Create New Song
             </button>
               </div>
@@ -441,7 +441,7 @@
               </div>
             </div>
             
-            <button class="feature-button mt-auto" onclick="startConcert()">
+            <button class="feature-button mt-auto" id="startConcertButton">
               <i class="fas fa-microphone-alt me-2"></i> Start Concert
             </button>
           </div>
@@ -851,7 +851,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="shareConcertResult()">
+          <button type="button" class="btn btn-primary" id="shareConcertResultButton">
             <i class="fas fa-share-alt me-2"></i> Share
           </button>
         </div>
