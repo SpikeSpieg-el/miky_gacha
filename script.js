@@ -16,61 +16,90 @@ function showFeedback(message) {
 
 // Функции переключения между разделами
 function showHome() {
+    console.log("Показываем главную страницу");
     hideAllSections();
     document.getElementById('homeContent').style.display = 'block';
-    setActiveButton('showHome');
+    setActiveButton('navHome');
+    
+    // Отображаем последние новости на главной странице
+    renderHomeNews();
+    
+    // Обновляем информацию для тайкун-режима на главной странице
+    const homeTotalFans = document.getElementById('homeTotalFans');
+    const homeSongCount = document.getElementById('homeSongCount');
+    
+    if (homeTotalFans) homeTotalFans.textContent = totalFans;
+    if (homeSongCount) homeSongCount.textContent = songs.length;
   }
   
   function showGachaSystem() {
+    console.log("Показываем гача-систему");
     hideAllSections();
     document.getElementById('gachaSystem').style.display = 'block';
-    setActiveButton('showGachaSystem');
+    setActiveButton('navGacha');
   }
   
   function showCollection() {
+    console.log("Показываем коллекцию");
     hideAllSections();
     document.getElementById('cardCollection').style.display = 'block';
     updateCollection();
+    setActiveButton('navCollection');
   }
   
   function showTycoon() {
+    console.log("Показываем тайкун-режим");
     hideAllSections();
     document.getElementById('tycoonMode').style.display = 'block';
-    setActiveButton('showTycoon');
+    setActiveButton('navTycoon');
     
     // Инициализируем тайкун-систему, если это первый показ
     initTycoonSystem();
   }
   
   function showNews() {
+    console.log("Показываем новости");
     hideAllSections();
     document.getElementById('newsSection').style.display = 'block';
     renderNews(sampleNewsData, 'dynamicNewsContainer');
+    setActiveButton('navNews');
   }
   
   function showShop() {
+    console.log("Показываем магазин");
     hideAllSections();
     document.getElementById('shopSection').style.display = 'block';
+    setActiveButton('navShop');
   }
   
   function showEvents() {
+    console.log("Показываем события");
     hideAllSections();
     document.getElementById('eventsSection').style.display = 'block';
     renderEvents(sampleEventsData, 'dynamicEventsContainer');
+    setActiveButton('navEvents');
   }
   
   function showProfile() {
+    console.log("Показываем профиль");
     hideAllSections();
     document.getElementById('profileSection').style.display = 'block';
+    setActiveButton('navProfile');
   }
   
   function hideAllSections() {
+    console.log("Скрываем все секции");
     const sections = [
       'homeContent', 'gachaSystem', 'cardCollection', 'tycoonMode', 
       'newsSection', 'shopSection', 'eventsSection', 'profileSection'
     ];
     sections.forEach(section => {
-      document.getElementById(section).style.display = 'none';
+      const el = document.getElementById(section);
+      if (el) {
+        el.style.display = 'none';
+      } else {
+        console.warn(`Секция ${section} не найдена!`);
+      }
     });
   }
   
@@ -97,11 +126,16 @@ function showHome() {
   
   // Функция для выделения активного раздела
   function setActiveButton(buttonId) {
+    console.log(`Устанавливаем активную кнопку: ${buttonId}`);
     const buttons = document.querySelectorAll('#sideMenu .nav-link');
     buttons.forEach(button => button.classList.remove('active')); // Убираем активный класс у всех кнопок
-    const activeButton = document.querySelector(`#sideMenu .nav-link[onclick*="${buttonId}"]`);
+    
+    // Теперь находим непосредственно по id кнопки
+    const activeButton = document.getElementById(buttonId);
     if (activeButton) {
       activeButton.classList.add('active'); // Добавляем активный класс к текущей кнопке
+    } else {
+      console.warn(`Кнопка с id ${buttonId} не найдена!`);
     }
   }
   
@@ -1478,31 +1512,32 @@ function showHome() {
   }
   
   // Добавляем обработчики событий для клонированных элементов коллекции
-  document.addEventListener('DOMContentLoaded', function() {
-    // Инициализируем некоторые карточки для демонстрации на главной странице
-    if (collection.length === 0) {
-      characters.forEach(char => {
-        collection.push({...char, 
-          power: Math.floor(Math.random() * 80) + 20,
-          beauty: Math.floor(Math.random() * 80) + 20,
-          charisma: Math.floor(Math.random() * 80) + 20,
-          vocal: Math.floor(Math.random() * 80) + 20,
-          description: "A starter Miku character."
-        });
-        
-        // Добавляем в список уникальных карт
-        if (!uniqueCards[char.img]) {
-          uniqueCards[char.img] = char;
-        }
-      });
-      
-      // Обновляем счетчик коллекции
-      updateCollectionCounter();
-    }
-    
-    // Инициализируем статистику тайкун-режима
-    updateTycoonStats();
-  });
+  // Удаляем этот обработчик DOMContentLoaded, так как он теперь в общем обработчике
+  // document.addEventListener('DOMContentLoaded', function() {
+  //   // Инициализируем некоторые карточки для демонстрации на главной странице
+  //   if (collection.length === 0) {
+  //     characters.forEach(char => {
+  //       collection.push({...char, 
+  //         power: Math.floor(Math.random() * 80) + 20,
+  //         beauty: Math.floor(Math.random() * 80) + 20,
+  //         charisma: Math.floor(Math.random() * 80) + 20,
+  //         vocal: Math.floor(Math.random() * 80) + 20,
+  //         description: "A starter Miku character."
+  //       });
+  //       
+  //       // Добавляем в список уникальных карт
+  //       if (!uniqueCards[char.img]) {
+  //         uniqueCards[char.img] = char;
+  //       }
+  //     });
+  //     
+  //     // Обновляем счетчик коллекции
+  //     updateCollectionCounter();
+  //   }
+  //   
+  //   // Инициализируем статистику тайкун-режима
+  //   updateTycoonStats();
+  // });
 
   // Функция для сбора наград за ежедневные задания
   function collectDailyTasks() {
@@ -1927,509 +1962,332 @@ function showHome() {
   }
   // --- End Starry Parallax Background ---
 
-  // Добавляем обработчик для кнопки объяснения характеристик
-  // This was already correctly placed inside the DOMContentLoaded listener that handles various initializations.
-  // The error was that the content of this listener was duplicated here.
-  // The original DOMContentLoaded listener for showStatsInfoBtn is kept further down.
-
-// --- Sample Data for News and Events ---
-const sampleNewsData = [
-  {
-    title: "New Album 'Cybernetic Symphony' Released!",
-    date: "OCT 26, 2024",
-    content: "Hatsune Miku's latest album, 'Cybernetic Symphony', is now available worldwide! Featuring 12 new tracks that blend futuristic sounds with her iconic vocal style. Don't miss out on the limited edition physical release with exclusive artwork.",
-    imageUrl: "мику_картинки/08402f4a15ae284a450e5f5f263cd443.webp",
-    buttonText: "Listen Now",
-    buttonLink: "#"
-  },
-  {
-    title: "Miku Expo 2025 World Tour Announced",
-    date: "OCT 15, 2024",
-    content: "Get ready! Miku Expo is hitting the road again in 2025 with a massive world tour. Dates and cities will be announced soon. Expect new songs, stunning visuals, and an unforgettable experience.",
-    imageUrl: "мику_картинки/a0f5fa7c8929d2572041c1740f285ff7.webp"
-  },
-  {
-    title: "Game Update v1.5: New Tycoon Features!",
-    date: "OCT 10, 2024",
-    content: "The Hatsune Miku Tycoon Gacha game has been updated to version 1.5! This update includes exciting new features for the Tycoon mode, balance adjustments, and a set of exclusive new cards. Log in now to check it out!",
-    buttonText: "Read Patch Notes",
-    buttonLink: "#"
-  }
-];
-
-const sampleEventsData = [
-  {
-    title: "Magical Mirai 2024",
-    dateRange: "SEP 01 - SEP 03, 2024",
-    description: "Join us for Magical Mirai 2024! A special in-game event celebrating Miku's annual concert series. Participate in event stages to earn exclusive cards and items.",
-    imageUrl: "мику_картинки/640b28cf1793694f9251afe6e1a43736.webp",
-    progress: 75, // Optional: 0-100
-    progressText: "7500/10000 EP",
-    buttonText: "Go to Event"
-  },
-  {
-    title: "Spring Melody Gacha Festival",
-    dateRange: "NOW - OCT 30, 2024",
-    description: "The Spring Melody Gacha is here! Increased chances to get rare Miku cards with floral themes. Special login bonuses available throughout the event.",
-    imageUrl: "мику_картинки/0361f24ce641bd47ebe323b33d627725.webp",
-    buttonText: "Pull Now!"
-  },
-  {
-    title: "Snow Miku 2025 Design Contest",
-    dateRange: "Submissions Open: NOV 01 - DEC 15, 2024",
-    description: "The annual Snow Miku design contest is starting soon! Submit your creative designs for Snow Miku 2025 and her rabbit Yukine. The winning design will become an official Nendoroid!",
-    imageUrl: "мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp",
-    buttonText: "Learn More"
-  }
-];
-
-// --- Rendering Functions for News and Events ---
-
-function renderNews(newsArray, containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) {
-    console.error(`Container with id ${containerId} not found for news.`);
-    return;
-  }
-  // Render only if container is empty to avoid duplication on re-clicking the menu
-  if (container.innerHTML.trim() !== "" && container.dataset.rendered === "true") return;
-
-  container.innerHTML = ""; // Clear previous content
-
-  newsArray.forEach(newsItem => {
-    const itemBox = document.createElement('div');
-    itemBox.className = 'feature-box mb-4';
-
-    let imageHtml = '';
-    if (newsItem.imageUrl) {
-      imageHtml = `<img src="${newsItem.imageUrl}" alt="${newsItem.title}" class="img-fluid rounded mb-3" style="max-height: 250px; object-fit: cover; width: 100%;">`;
-    }
-
-    let buttonHtml = '';
-    if (newsItem.buttonText && newsItem.buttonLink) {
-      buttonHtml = `<button class="feature-button mt-3" onclick="window.open('${newsItem.buttonLink}', '_blank')">${newsItem.buttonText}</button>`;
-    } else if (newsItem.buttonText) {
-       buttonHtml = `<button class="feature-button mt-3">${newsItem.buttonText}</button>`;
-    }
-
-
-    itemBox.innerHTML = `
-      <h3 class="feature-title">${newsItem.title}</h3>
-      <p class="news-date">${newsItem.date}</p>
-      ${imageHtml}
-      <p>${newsItem.content}</p>
-      ${buttonHtml}
-    `;
-    container.appendChild(itemBox);
-  });
-  container.dataset.rendered = "true";
-}
-
-function renderEvents(eventsArray, containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) {
-    console.error(`Container with id ${containerId} not found for events.`);
-    return;
-  }
-  if (container.innerHTML.trim() !== "" && container.dataset.rendered === "true") return;
-  
-  container.innerHTML = ""; // Clear previous content
-
-  eventsArray.forEach(eventItem => {
-    const itemBox = document.createElement('div');
-    itemBox.className = 'feature-box mb-4';
-
-    let imageCellHtml = ''; // Changed variable name for clarity
-    if (eventItem.imageUrl) {
-      // Add 'event-image-container' class to the div wrapping the image
-      imageCellHtml = `<div class="col-md-4 event-image-container"><img src="${eventItem.imageUrl}" alt="${eventItem.title}" class="img-fluid rounded"></div>`;
-    }
-
-    let progressHtml = '';
-    if (eventItem.progress !== undefined && eventItem.progressText) {
-      progressHtml = `
-        <div class="progress mb-2" style="height: 20px;">
-          <div class="progress-bar bg-success" role="progressbar" style="width: ${eventItem.progress}%;" aria-valuenow="${eventItem.progress}" aria-valuemin="0" aria-valuemax="100">${eventItem.progress}%</div>
-        </div>
-        <p class="mb-2">Progress: ${eventItem.progressText}</p>
-      `;
-    }
-    
-    let buttonHtml = '';
-    if (eventItem.buttonText && eventItem.buttonLink) {
-        buttonHtml = `<button class="feature-button" onclick="window.open('${eventItem.buttonLink}', '_blank')">${eventItem.buttonText}</button>`;
-    } else if (eventItem.buttonText) {
-        buttonHtml = `<button class="feature-button">${eventItem.buttonText}</button>`;
-    }
-
-
-    itemBox.innerHTML = `
-      <div class="row">
-        ${imageCellHtml} 
-        <div class="${eventItem.imageUrl ? 'col-md-8' : 'col-md-12'}">
-          <h3 class="feature-title">${eventItem.title}</h3>
-          <p class="news-date">${eventItem.dateRange}</p>
-          <p>${eventItem.description}</p>
-          ${progressHtml}
-          ${buttonHtml}
-        </div>
-      </div>
-    `;
-    container.appendChild(itemBox);
-  });
-  container.dataset.rendered = "true";
-}
-
-
-// --- End Rendering Functions ---
-
-// --- Basic Unit Tests ---
-function assertEqual(actual, expected, message) {
-  if (actual === expected) {
-    console.log(`PASS: ${message}`);
-    return true;
-  } else {
-    console.error(`FAIL: ${message}. Expected "${expected}", but got "${actual}".`);
-    return false;
-  }
-}
-
-function assertElementPresent(selector, message) {
-  if (document.querySelector(selector)) {
-    console.log(`PASS: ${message}`);
-    return true;
-  } else {
-    console.error(`FAIL: ${message}. Element "${selector}" not found.`);
-    return false;
-  }
-}
-
-function assertElementTextContains(selector, text, message) {
-  const element = document.querySelector(selector);
-  if (element && element.textContent.includes(text)) {
-    console.log(`PASS: ${message}`);
-    return true;
-  } else if (!element) {
-    console.error(`FAIL: ${message}. Element "${selector}" not found.`);
-    return false;
-  } else {
-    console.error(`FAIL: ${message}. Element "${selector}" does not contain text "${text}". Actual: "${element.textContent}".`);
-    return false;
-  }
-}
-
-function setupTestContainer(id) {
-  let container = document.getElementById(id);
-  if (container) {
-    container.innerHTML = ''; // Clear if exists
-  } else {
-    container = document.createElement('div');
-    container.id = id;
-    document.body.appendChild(container); // Append to body for tests to run
-  }
-  container.dataset.rendered = "false"; // Reset rendered state
-  return container;
-}
-
-function cleanupTestContainer(id) {
-  const container = document.getElementById(id);
-  if (container) {
-    container.remove();
-  }
-}
-
-function testRenderNews() {
-  console.log("--- Testing renderNews ---");
-  const containerId = 'testNewsContainer';
-  let passCount = 0;
-  let failCount = 0;
-
-  // Test 1: Empty array
-  setupTestContainer(containerId);
-  renderNews([], containerId);
-  const newsContainer = document.getElementById(containerId);
-  if (assertEqual(newsContainer.children.length, 0, "Test 1: Renders no items for empty array")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  cleanupTestContainer(containerId);
-
-  // Test 2: With sample data
-  setupTestContainer(containerId);
-  const sampleNews = [
-    { title: "News 1", date: "Date 1", content: "Content 1", imageUrl: "img1.jpg", buttonText: "Read More" },
-    { title: "News 2", date: "Date 2", content: "Content 2" }
-  ];
-  renderNews(sampleNews, containerId);
-  if (assertEqual(newsContainer.children.length, 2, "Test 2.1: Renders correct number of news items")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementTextContains(`#${containerId} .feature-box:first-child .feature-title`, "News 1", "Test 2.2: Renders correct title for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementTextContains(`#${containerId} .feature-box:first-child .news-date`, "Date 1", "Test 2.3: Renders correct date for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementPresent(`#${containerId} .feature-box:first-child img[src="img1.jpg"]`, "Test 2.4: Renders image for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementPresent(`#${containerId} .feature-box:first-child button`, "Test 2.5: Renders button for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementPresent(`#${containerId} .feature-box:last-child .feature-title`, "Test 2.6: Renders title for second item")) {
-     passCount++;
-  } else {
-    failCount++;
-  }
-  // Check that the second item does *not* have an image or button if not specified
-  const secondItemImg = newsContainer.querySelector('.feature-box:last-child img');
-  if (assertEqual(secondItemImg, null, "Test 2.7: Second item does not have an image")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  const secondItemButton = newsContainer.querySelector('.feature-box:last-child button');
-  if (assertEqual(secondItemButton, null, "Test 2.8: Second item does not have a button")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-
-  cleanupTestContainer(containerId);
-  console.log(`renderNews Tests: ${passCount} passed, ${failCount} failed.`);
-  return failCount === 0;
-}
-
-function testRenderEvents() {
-  console.log("--- Testing renderEvents ---");
-  const containerId = 'testEventsContainer';
-  let passCount = 0;
-  let failCount = 0;
-
-  // Test 1: Empty array
-  setupTestContainer(containerId);
-  renderEvents([], containerId);
-  const eventsContainer = document.getElementById(containerId);
-  if (assertEqual(eventsContainer.children.length, 0, "Test 1: Renders no items for empty array")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  cleanupTestContainer(containerId);
-
-  // Test 2: With sample data
-  setupTestContainer(containerId);
-  const sampleEvents = [
-    { title: "Event 1", dateRange: "Dates 1", description: "Desc 1", imageUrl: "event1.jpg", progress: 50, progressText: "50/100", buttonText: "Join" },
-    { title: "Event 2", dateRange: "Dates 2", description: "Desc 2" }
-  ];
-  renderEvents(sampleEvents, containerId);
-  if (assertEqual(eventsContainer.children.length, 2, "Test 2.1: Renders correct number of event items")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementTextContains(`#${containerId} .feature-box:first-child .feature-title`, "Event 1", "Test 2.2: Renders correct title for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementTextContains(`#${containerId} .feature-box:first-child .news-date`, "Dates 1", "Test 2.3: Renders correct date range for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementPresent(`#${containerId} .feature-box:first-child .event-image-container img[src="event1.jpg"]`, "Test 2.4: Renders image for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementPresent(`#${containerId} .feature-box:first-child .progress`, "Test 2.5: Renders progress bar for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  if (assertElementPresent(`#${containerId} .feature-box:first-child button`, "Test 2.6: Renders button for first item")) {
-    passCount++;
-  } else {
-    failCount++;
-  }
-  // Check that the second item does *not* have an image, progress or button if not specified
-  const secondItemImgContainer = eventsContainer.querySelector('.feature-box:last-child .event-image-container');
-  if (assertEqual(secondItemImgContainer, null, "Test 2.7: Second item does not have an image container")) {
-      passCount++;
-  } else {
-      failCount++;
-  }
-  const secondItemProgress = eventsContainer.querySelector('.feature-box:last-child .progress');
-  if (assertEqual(secondItemProgress, null, "Test 2.8: Second item does not have a progress bar")) {
-      passCount++;
-  } else {
-      failCount++;
-  }
-  const secondItemButton = eventsContainer.querySelector('.feature-box:last-child button');
-  if (assertEqual(secondItemButton, null, "Test 2.9: Second item does not have a button")) {
-      passCount++;
-  } else {
-      failCount++;
-  }
-
-
-  cleanupTestContainer(containerId);
-  console.log(`renderEvents Tests: ${passCount} passed, ${failCount} failed.`);
-  return failCount === 0;
-}
-
-function runAllTests() {
-  console.log("===== Running All Unit Tests =====");
-  let overallSuccess = true;
-  
-  if (!testRenderNews()) {
-    overallSuccess = false;
-  }
-  if (!testRenderEvents()) {
-    overallSuccess = false;
-  }
-
-  if (overallSuccess) {
-    console.log("===== All tests passed! =====");
-  } else {
-    console.error("===== Some tests failed. Please check logs. =====");
-  }
-}
-
-// Automatically run tests when the script is loaded
-// Ensure DOM is ready for container manipulation if tests run immediately
-document.addEventListener('DOMContentLoaded', function() {
-    runAllTests();
-});
-// --- End Basic Unit Tests ---
-
-// The following block was the cause of the syntax error.
-// It was a duplicate of the event listener for 'showStatsInfoBtn' and was also incomplete.
-// The original 'showStatsInfoBtn' listener is correctly placed within a DOMContentLoaded event.
-// Removing this entire duplicated and malformed block.
-
 // --- Event Listener Setup ---
 document.addEventListener('DOMContentLoaded', function() {
+  // Запускаем тесты, вызывая функцию из render.js
+  // runAllTests(); // Эта функция перенесена в render.js, закомментировано, чтобы избежать конфликтов
+  
+  // Очищаем все backdrop элементы при загрузке страницы
+  clearBackdrops();
+  
+  // Инициализируем некоторые карточки для демонстрации на главной странице
+  if (collection.length === 0) {
+    characters.forEach(char => {
+      collection.push({...char, 
+        power: Math.floor(Math.random() * 80) + 20,
+        beauty: Math.floor(Math.random() * 80) + 20,
+        charisma: Math.floor(Math.random() * 80) + 20,
+        vocal: Math.floor(Math.random() * 80) + 20,
+        description: "A starter Miku character."
+      });
+      
+      // Добавляем в список уникальных карт
+      if (!uniqueCards[char.img]) {
+        uniqueCards[char.img] = char;
+      }
+    });
+    
+    // Обновляем счетчик коллекции
+    updateCollectionCounter();
+  }
+  
+  // Инициализируем статистику тайкун-режима
+  updateTycoonStats();
+  
+  // Отображаем новости на главной странице при загрузке
+  renderHomeNews();
+  
   // Header buttons
   const headerLogoLink = document.getElementById('headerLogoLink');
-  if (headerLogoLink) headerLogoLink.addEventListener('click', function(e) { e.preventDefault(); showHome(); });
+  if (headerLogoLink) {
+    console.log('Найдена кнопка headerLogoLink');
+    headerLogoLink.addEventListener('click', function(e) { 
+      e.preventDefault(); 
+      console.log('Нажата кнопка headerLogoLink');
+      showHome(); 
+    });
+  } else {
+    console.warn('Кнопка headerLogoLink не найдена!');
+  }
   
   const headerMenuButton = document.getElementById('headerMenuButton');
-  if (headerMenuButton) headerMenuButton.addEventListener('click', toggleMenu);
+  if (headerMenuButton) {
+    console.log('Найдена кнопка headerMenuButton');
+    headerMenuButton.addEventListener('click', function() {
+      console.log('Нажата кнопка headerMenuButton');
+      toggleMenu();
+    });
+  } else {
+    console.warn('Кнопка headerMenuButton не найдена!');
+  }
 
   // Home page buttons
   const homePlayNowButton = document.getElementById('homePlayNowButton');
-  if (homePlayNowButton) homePlayNowButton.addEventListener('click', showGachaSystem);
+  if (homePlayNowButton) {
+    console.log('Найдена кнопка homePlayNowButton');
+    homePlayNowButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homePlayNowButton');
+      showGachaSystem();
+    });
+  } else {
+    console.warn('Кнопка homePlayNowButton не найдена!');
+  }
   
   const homeShowCollectionButton = document.getElementById('homeShowCollectionButton');
-  if (homeShowCollectionButton) homeShowCollectionButton.addEventListener('click', showCollection);
+  if (homeShowCollectionButton) {
+    console.log('Найдена кнопка homeShowCollectionButton');
+    homeShowCollectionButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowCollectionButton');
+      showCollection();
+    });
+  } else {
+    console.warn('Кнопка homeShowCollectionButton не найдена!');
+  }
   
   const homeShowNewsButton = document.getElementById('homeShowNewsButton');
-  if (homeShowNewsButton) homeShowNewsButton.addEventListener('click', showNews);
+  if (homeShowNewsButton) {
+    console.log('Найдена кнопка homeShowNewsButton');
+    homeShowNewsButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowNewsButton');
+      showNews();
+    });
+  } else {
+    console.warn('Кнопка homeShowNewsButton не найдена!');
+  }
   
   const homeShowTycoonButton = document.getElementById('homeShowTycoonButton');
-  if (homeShowTycoonButton) homeShowTycoonButton.addEventListener('click', showTycoon);
+  if (homeShowTycoonButton) {
+    console.log('Найдена кнопка homeShowTycoonButton');
+    homeShowTycoonButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowTycoonButton');
+      showTycoon();
+    });
+  } else {
+    console.warn('Кнопка homeShowTycoonButton не найдена!');
+  }
   
   const homeShowGachaButton = document.getElementById('homeShowGachaButton');
-  if (homeShowGachaButton) homeShowGachaButton.addEventListener('click', showGachaSystem);
+  if (homeShowGachaButton) {
+    console.log('Найдена кнопка homeShowGachaButton');
+    homeShowGachaButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowGachaButton');
+      showGachaSystem();
+    });
+  } else {
+    console.warn('Кнопка homeShowGachaButton не найдена!');
+  }
 
   // Side Menu buttons
   const sideMenuCloseButton = document.getElementById('sideMenuCloseButton');
   if (sideMenuCloseButton) sideMenuCloseButton.addEventListener('click', toggleMenu);
 
-  const navHome = document.getElementById('navHome');
-  if (navHome) navHome.addEventListener('click', function() { showHome(); toggleMenu(); });
-  
-  const navGacha = document.getElementById('navGacha');
-  if (navGacha) navGacha.addEventListener('click', function() { showGachaSystem(); toggleMenu(); });
-  
-  const navCollection = document.getElementById('navCollection');
-  if (navCollection) navCollection.addEventListener('click', function() { showCollection(); toggleMenu(); });
-  
-  const navTycoon = document.getElementById('navTycoon');
-  if (navTycoon) navTycoon.addEventListener('click', function() { showTycoon(); toggleMenu(); });
-  
-  const navNews = document.getElementById('navNews');
-  if (navNews) navNews.addEventListener('click', function() { showNews(); toggleMenu(); });
-  
-  const navShop = document.getElementById('navShop');
-  if (navShop) navShop.addEventListener('click', function() { showShop(); toggleMenu(); });
-  
-  const navEvents = document.getElementById('navEvents');
-  if (navEvents) navEvents.addEventListener('click', function() { showEvents(); toggleMenu(); });
-  
-  const navProfile = document.getElementById('navProfile');
-  if (navProfile) navProfile.addEventListener('click', function() { showProfile(); toggleMenu(); });
+  const navButtons = {
+    'navHome': showHome,
+    'navGacha': showGachaSystem,
+    'navCollection': showCollection,
+    'navTycoon': showTycoon,
+    'navNews': showNews,
+    'navShop': showShop,
+    'navEvents': showEvents,
+    'navProfile': showProfile
+  };
 
-  // Character Detail Modal - Stats Info Button
+  Object.entries(navButtons).forEach(([id, handler]) => {
+    const button = document.getElementById(id);
+    if (button) {
+      button.addEventListener('click', () => {
+        handler();
+        toggleMenu(); // Close menu after navigation
+      });
+    }
+  });
+  
+  // Добавляем обработчик на кнопку "Забрать"
+  const collectButton = document.getElementById('collectGachaButton');
+  if (collectButton) {
+    collectButton.addEventListener('click', function() {
+      if (lastPulledCardsData.length > 0) {
+        // Отображаем карты в основном контейнере
+        displayPulledCards(lastPulledCardsData, 'gachaResults'); 
+
+        // Обновляем счетчики и коллекцию
+        updateCollection();
+        updateCollectionCounter();
+        updateTycoonStats(); // Обновляем все статы, включая гемы
+      }
+
+      // Закрываем модальное окно
+      if (gachaPullModalInstance) {
+        gachaPullModalInstance.hide();
+      }
+
+      // Очищаем временные данные
+      lastPulledCardsData = [];
+    });
+  }
+  
+  // Обработчик изменения цены билета
+  const ticketPriceSlider = document.getElementById('ticketPrice');
+  const ticketPriceValue = document.getElementById('ticketPriceValue');
+  
+  if (ticketPriceSlider && ticketPriceValue) {
+    ticketPriceSlider.addEventListener('input', function() {
+      ticketPriceValue.textContent = this.value;
+    });
+  }
+  
+  // Добавляем обработчик для кнопки сохранения команды
+  const saveTeamButton = document.getElementById('saveTeam');
+  if (saveTeamButton) {
+    saveTeamButton.addEventListener('click', function() {
+      // Закрываем модальное окно
+      if (teamModalInstance) {
+        teamModalInstance.hide();
+      }
+      
+      // Пересчитываем бонусы команды
+      calculateTeamBonuses();
+      
+      // Обновляем отображение команды
+      updateTeamDisplay();
+      
+      // Показываем сообщение об успешном сохранении
+      showFeedback('Team composition saved!');
+      
+      // Добавляем запись в лог
+      updateActivityLog('Team Updated', 'Your team composition has been updated');
+    });
+  }
+  
+  // Добавляем обработчики для всех модальных окон, чтобы правильно удалять backdrop
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function() {
+      // Небольшая задержка перед очисткой, чтобы анимация успела завершиться
+      setTimeout(clearBackdrops, 100);
+    });
+  });
+  
+  // Анимируем элементы при загрузке
+  animateElementsOnLoad();
+  
+  // Добавляем эффект параллакса для фона
+  document.addEventListener('mousemove', function(e) {
+    const moveX = (e.clientX - window.innerWidth / 2) / 50;
+    const moveY = (e.clientY - window.innerHeight / 2) / 50;
+    
+    document.querySelectorAll('.musical-particle-1, .musical-particle-2, .musical-particle-3, .musical-particle-4, .musical-particle-5, .floating-note').forEach(particle => {
+      particle.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    });
+  });
+
+  // Initialize Starry Parallax Background
+  initStarryParallax();
+  
+  // Show stats info button functionality
   const showStatsInfoBtn = document.getElementById('showStatsInfoBtn');
   if (showStatsInfoBtn) {
     showStatsInfoBtn.addEventListener('click', function() {
-      // Check if the modal instance for stats info already exists or needs creation
-      // This assumes 'statsInfoModalInstance' is a global or appropriately scoped variable
-      // For simplicity, we'll try to get or create it.
-      let statsModal = bootstrap.Modal.getInstance(document.getElementById('statsInfoModalInstance'));
-      if (!statsModal) {
-          const statsInfoModalDiv = document.createElement('div');
-          statsInfoModalDiv.className = 'modal fade';
-          statsInfoModalDiv.id = 'statsInfoModalInstance'; // Use a consistent ID
-          statsInfoModalDiv.innerHTML = `
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">Объяснение характеристик</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <p><strong>Характеристики персонажей:</strong></p>
-                  <ul class="stats-explanation">
-                    <li><strong>P (Power/Сила)</strong>: Определяет общую эффективность персонажа в команде и влияет на успех выступлений. Чем выше сила, тем больше влияние персонажа на команду.</li>
-                    <li><strong>B (Beauty/Красота)</strong>: Влияет на внешнюю привлекательность выступлений и способность привлекать определенную аудиторию. Персонажи с высокой красотой создают более зрелищные выступления.</li>
-                    <li><strong>C (Charisma/Харизма)</strong>: Напрямую влияет на привлечение фанатов и удержание аудитории. Персонажи с высокой харизмой привлекают больше фанатов после выступлений.</li>
-                    <li><strong>V (Vocal/Вокал)</strong>: Определяет качество создаваемых песен и их популярность. Хороший вокал позволяет создавать более успешные треки.</li>
-                  </ul>
-                  <div class="mt-3">
-                    <p><strong>Как использовать характеристики:</strong></p>
-                    <ul>
-                      <li>Для создания хороших песен выбирайте персонажей с высоким значением Vocal</li>
-                      <li>Для успешных концертов важна комбинация Beauty и Power</li>
-                      <li>Для быстрого роста фан-базы ориентируйтесь на персонажей с высокой Charisma</li>
-                      <li>Сбалансированная команда с разными сильными сторонами даст лучшие результаты</li>
-                    </ul>
-                  </div>
+      let statsModal;
+      const existingModal = document.getElementById('statsInfoModal');
+      if (existingModal) {
+        statsModal = bootstrap.Modal.getInstance(existingModal);
+      } else {
+        const statsInfoModalDiv = document.createElement('div');
+        statsInfoModalDiv.className = 'modal fade';
+        statsInfoModalDiv.id = 'statsInfoModal';
+        statsInfoModalDiv.innerHTML = `
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Character Stats Explanation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <h6>Power</h6>
+                <p>Determines the character's overall strength and influence in performances.</p>
+                
+                <h6>Beauty</h6>
+                <p>Affects visual appeal and stage presence during concerts.</p>
+                
+                <h6>Charisma</h6>
+                <p>Influences fan engagement and crowd interaction.</p>
+                
+                <h6>Vocal</h6>
+                <p>Represents singing ability and musical talent.</p>
+                
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>Higher stats will improve your concert performance and fan gains!
                 </div>
               </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
             </div>
-          `;
-          document.body.appendChild(statsInfoModalDiv);
-          statsModal = new bootstrap.Modal(statsInfoModalDiv);
-          statsInfoModalDiv.addEventListener('hidden.bs.modal', function() {
-            document.body.removeChild(statsInfoModalDiv); // Clean up modal from DOM after it's hidden
-          });
+          </div>
+        `;
+        document.body.appendChild(statsInfoModalDiv);
+        statsModal = new bootstrap.Modal(statsInfoModalDiv);
+        statsInfoModalDiv.addEventListener('hidden.bs.modal', function() {
+          document.body.removeChild(statsInfoModalDiv); // Clean up modal from DOM after it's hidden
+        });
       }
       statsModal.show();
     });
   }
-    // Ensure other initializations like tycoon system, collection counter updates, etc.,
-    // are also within a DOMContentLoaded if they manipulate DOM elements.
-    // Many are already called from functions like showTycoon, showCollection, etc.
-    // The existing DOMContentLoaded for tests is fine.
-    // The one for animateElementsOnLoad and parallax is also fine.
-    // The one for ticketPriceSlider is also fine.
-    // The one for saveTeamButton is fine.
-    // The one for collectGachaButton is fine.
+  
+  // Вывод в консоль для отладки
+  console.log("DOMContentLoaded: Инициализация завершена");
 });
 // --- End Event Listener Setup ---
+
+// Функция для отображения новостей на главной странице
+function renderHomeNews() {
+  const newsContainer = document.getElementById('homeNewsBox');
+  if (!newsContainer) {
+    console.error('Контейнер новостей на главной странице не найден!');
+    return;
+  }
+
+  // Сохраняем заголовок
+  const title = newsContainer.querySelector('.feature-title');
+  
+  // Очищаем контейнер, сохраняя заголовок
+  newsContainer.innerHTML = '';
+  if (title) {
+    newsContainer.appendChild(title);
+  } else {
+    const newTitle = document.createElement('h3');
+    newTitle.className = 'feature-title';
+    newTitle.textContent = 'NEWS';
+    newsContainer.appendChild(newTitle);
+  }
+
+  // Отображаем только 2 последние новости для главной страницы
+  const latestNews = sampleNewsData.slice(0, 2);
+  
+  latestNews.forEach(news => {
+    const newsItem = document.createElement('div');
+    newsItem.className = 'news-item';
+    
+    newsItem.innerHTML = `
+      <p>${news.title}</p>
+      <p class="news-date">${news.date}</p>
+      <div class="dots-indicator">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+    `;
+    
+    newsContainer.appendChild(newsItem);
+  });
+  
+  // Добавляем кнопку для перехода в раздел новостей
+  const button = document.createElement('button');
+  button.className = 'feature-button mt-2';
+  button.id = 'homeShowNewsButton';
+  button.textContent = 'NEWS';
+  button.addEventListener('click', showNews);
+  
+  newsContainer.appendChild(button);
+}
