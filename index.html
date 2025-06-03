@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Hatsune Miku Tycoon Gacha - Коллекционируйте карточки и управляйте студией!" />
+  <meta name="keywords" content="Hatsune Miku, гача, тайкун, коллекционные карточки, idol manager" />
+  <meta name="author" content="Miku Gacha Team" />
   <title>Hatsune Miku Tycoon Gacha</title>
+  <link rel="icon" type="image/png" href="1logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css">
@@ -36,11 +40,11 @@
         /* filter: blur(1px) brightness(0.9); */ 
     }
 
-    /* Гарантируем видимость tooltip внутри модального окна команды */
+    /* Гарантируем видимость tooltip внутри модального окна команды 
     #teamModal .col-md-8, 
     #teamModal #cardSelection {
-        /* overflow: visible !important; Разрешаем контенту выходить за границы */
-    }
+         overflow: visible !important; Разрешаем контенту выходить за границы 
+    }*/
 
     /* Убедимся, что контейнер для карточек имеет относительное позиционирование */
     #cardSelection {
@@ -49,29 +53,25 @@
   </style>
 </head>
 <body>
-  <!-- Мерцающие звезды для фона -->
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
-  <div class="star"></div>
+  <!-- Parallax Background Container -->
+  <div class="parallax-bg">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>
+    <!-- Stars will be dynamically added here by JavaScript -->
+  </div>
 
   <!-- Новый хедер с лого -->
   <header class="fixed-top bg-dark bg-opacity-75 py-2">
     <div class="container-fluid">
       <div class="d-flex justify-content-between align-items-center">
-        <a href="#" onclick="showHome()" class="text-decoration-none">
+        <a href="#" id="headerLogoLink" class="text-decoration-none">
           <div class="d-flex align-items-center">
             <img src="1logo.png" alt="Logo" class="header-logo me-2" style="height: 40px;">
             <h1 class="header-title m-0" style="color: var(--accent-color); font-size: 1.5rem;">Miku Gacha</h1>
           </div>
         </a>
-        <button class="menu-button" onclick="toggleMenu()">
+        <button class="menu-button" id="headerMenuButton">
           <i class="fas fa-bars"></i>
         </button>
       </div>
@@ -87,7 +87,7 @@
         <h2 class="site-subtitle">Tycoon Gacha</h2>
         <p class="site-description">Collect cards and play tycoon!</p>
         <div class="text-center text-md-start">
-          <button class="play-button" onclick="showGachaSystem()">PLAY NOW</button>
+          <button class="play-button" id="homePlayNowButton">PLAY NOW</button>
         </div>
         </div>
         <!--<img src="" alt="Hatsune Miku Screen" class="header-image">-->
@@ -95,7 +95,7 @@
 
       <div class="row mt-5">
         <div class="col-md-6">
-          <div class="feature-box">
+          <div class="feature-box" id="homeCardCollectionBox">
             <h3 class="feature-title">CARD COLLECTION</h3>
             <div class="card-collection-box">
               <div class="card-thumbnail"><img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Miku"></div>
@@ -105,14 +105,14 @@
               <div class="card-thumbnail"><img src="мику_картинки/a0f5fa7c8929d2572041c1740f285ff7.webp" alt="Miku Star"></div>
             </div>
             <p class="card-count mb-4">124/200</p>
-            <button class="feature-button" onclick="showCollection()">CARD COLLECTION</button>
+            <button class="feature-button" id="homeShowCollectionButton">CARD COLLECTION</button>
           </div>
         </div>
         
         <div class="col-md-6">
           <div class="row">
             <div class="col-md-12">
-              <div class="feature-box">
+              <div class="feature-box" id="homeNewsBox">
                 <h3 class="feature-title">NEWS</h3>
                 <div class="news-item">
                   <p>Lorem ipsum dolor sit amet</p>
@@ -130,7 +130,7 @@
                     <span class="dot"></span>
                   </div>
                 </div>
-                <button class="feature-button mt-2" onclick="showNews()">NEWS</button>
+                <button class="feature-button mt-2" id="homeShowNewsButton">NEWS</button>
               </div>
             </div>
           </div>
@@ -138,7 +138,7 @@
           <!-- Добавляем новый блок для тайкун-режима здесь -->
           <div class="row mt-3">
             <div class="col-md-12">
-              <div class="feature-box">
+              <div class="feature-box" id="homeTycoonBox">
                 <h3 class="feature-title">TYCOON STUDIO</h3>
                 <p>Manage your own idol studio, create songs and perform concerts!</p>
                 <div class="d-flex justify-content-between align-items-center mt-3">
@@ -149,15 +149,15 @@
                     <i class="fas fa-music me-2" style="color: var(--accent-color);"></i> <span id="homeSongCount">0</span> Songs
                   </div>
                 </div>
-                <button class="feature-button mt-3" onclick="showTycoon()">TYCOON MODE</button>
+                <button class="feature-button mt-3" id="homeShowTycoonButton">TYCOON MODE</button>
               </div>
             </div>
           </div>
         </div>
         <div class="col-md-12 mb-4">
-            <div class="feature-box text-center">
+            <div class="feature-box text-center" id="homeGachaBox">
               <img src="1_screen.png" alt="Gacha Machine" class="gacha-machine">
-              <button class="feature-button mt-3" onclick="showGachaSystem()">GACHA!</button>
+              <button class="feature-button mt-3" id="homeShowGachaButton">GACHA!</button>
           </div>
         </div>
       </div>
@@ -165,19 +165,19 @@
     
     <!-- Боковое меню (изначально скрыто) -->
     <div id="sideMenu">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="m-0">Menu</h4>
-        <button class="btn-close btn-close-white" onclick="toggleMenu()"></button>
+      <div class="side-menu-header">
+        <h4 class="side-menu-title">Menu</h4>
+        <button class="btn-close btn-close-white" id="sideMenuCloseButton"></button>
       </div>
       <div class="nav flex-column">
-        <button class="nav-link" onclick="showHome(); toggleMenu();">Home</button>
-        <button class="nav-link" onclick="showGachaSystem(); toggleMenu();">Gacha</button>
-        <button class="nav-link" onclick="showCollection(); toggleMenu();">Collection</button>
-        <button class="nav-link" onclick="showTycoon(); toggleMenu();">Tycoon</button>
-        <button class="nav-link" onclick="showNews(); toggleMenu();">News</button>
-        <button class="nav-link" onclick="showShop(); toggleMenu();">Shop</button>
-        <button class="nav-link" onclick="showEvents(); toggleMenu();">Events</button>
-        <button class="nav-link" onclick="showProfile(); toggleMenu();">Profile</button>
+        <button class="nav-link" id="navHome"><i class="fas fa-home"></i>Home</button>
+        <button class="nav-link" id="navGacha"><i class="fas fa-dice"></i>Gacha</button>
+        <button class="nav-link" id="navCollection"><i class="fas fa-images"></i>Collection</button>
+        <button class="nav-link" id="navTycoon"><i class="fas fa-briefcase"></i>Tycoon</button>
+        <button class="nav-link" id="navNews"><i class="fas fa-newspaper"></i>News</button>
+        <button class="nav-link" id="navShop"><i class="fas fa-store"></i>Shop</button>
+        <button class="nav-link" id="navEvents"><i class="fas fa-calendar-alt"></i>Events</button>
+        <button class="nav-link" id="navProfile"><i class="fas fa-user-circle"></i>Profile</button>
       </div>
     </div>
     
@@ -185,11 +185,11 @@
     <div id="gachaSystem" style="display: none;">
       <h1>🎤 Hatsune Miku Tycoon Gacha</h1>
         <div class="text-center mb-3">
-          <button class="btn btn-primary" onclick="pullGacha(1)">Pull x1 (10💎)</button>
-          <button class="btn btn-success" onclick="pullGacha(10)">Pull x10 (100💎)</button>
+          <button class="btn btn-primary" id="pullGacha1Button">Pull x1 (10💎)</button>
+          <button class="btn btn-success" id="pullGacha10Button">Pull x10 (100💎)</button>
         </div>
       <div class="text-center mb-3">
-        <button class="btn btn-secondary" onclick="showCollection()">Go to Collection</button>
+        <button class="btn btn-secondary" id="gachaGoToCollectionButton">Go to Collection</button>
       </div>
         <div id="gachaResults" class="row justify-content-center g-3"></div>
     </div>
@@ -200,7 +200,7 @@
         <div class="text-center mb-3">
           <label for="sortType" class="form-label">Сортировать по:</label>
           <div class="input-group justify-content-center">
-            <select id="sortType" class="form-select w-auto" onchange="updateCollection()">
+            <select id="sortType" class="form-select w-auto">
               <option value="none">Без сортировки</option>
               <option value="rarity">Редкость</option>
               <option value="power">Сила</option>
@@ -208,13 +208,13 @@
               <option value="charisma">Харизма</option>
               <option value="vocal">Вокал</option>
             </select>
-            <button class="btn btn-outline-secondary" type="button" onclick="updateCollection()">
+            <button class="btn btn-outline-secondary" type="button" id="sortButton">
               <i class="fas fa-sort"></i>
             </button>
           </div>
         </div>
       <div class="text-center mb-3">
-        <button class="btn btn-secondary" onclick="showGachaSystem()">Go to Gacha</button>
+        <button class="btn btn-secondary" id="collectionGoToGachaButton">Go to Gacha</button>
         </div>
         <ul class="nav nav-tabs" id="collectionTabs">
           <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#all">All</a></li>
@@ -283,7 +283,7 @@
             
             <div class="row mt-3">
               <div class="col-12">
-                <button class="feature-button" onclick="upgradeStudio()">
+                <button class="feature-button" id="upgradeStudioButton">
                   <i class="fas fa-arrow-up me-2"></i> Upgrade Studio (500💎)
                 </button>
               </div>
@@ -327,7 +327,7 @@
               </div>
             </div>
             
-            <button class="feature-button mt-3" onclick="collectDailyTasks()">
+            <button class="feature-button mt-3" id="collectDailyTasksButton">
               <i class="fas fa-check-circle me-2"></i> Collect Rewards
             </button>
           </div>
@@ -370,7 +370,7 @@
               </ul>
             </div>
             
-            <button class="feature-button mt-auto" onclick="showTeamManagement()">
+            <button class="feature-button mt-auto" id="manageTeamButton">
               <i class="fas fa-users me-2"></i> Manage Team
             </button>
           </div>
@@ -405,7 +405,7 @@
         </div>
       </div>
       
-            <button class="feature-button mt-auto" onclick="produceSong()">
+            <button class="feature-button mt-auto" id="produceSongButton">
               <i class="fas fa-music me-2"></i> Create New Song
             </button>
               </div>
@@ -445,7 +445,7 @@
               </div>
             </div>
             
-            <button class="feature-button mt-auto" onclick="startConcert()">
+            <button class="feature-button mt-auto" id="startConcertButton">
               <i class="fas fa-microphone-alt me-2"></i> Start Concert
             </button>
           </div>
@@ -478,37 +478,8 @@
     <!-- Новости (изначально скрыты) -->
     <div id="newsSection" style="display: none;">
       <h2 class="mb-4">News & Updates</h2>
-      
-      <div class="feature-box mb-4">
-        <h3 class="feature-title">New Event: Summer Festival</h3>
-        <p class="news-date">APR 22, 2024</p>
-        <div class="mb-3">
-          <p>Join our summer festival event and get exclusive Miku summer cards! The event will run for 2 weeks.</p>
-          <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Summer Event" class="img-fluid rounded mb-3" style="max-height: 300px;">
-          <button class="feature-button" onclick="showEvents()">Join Event</button>
-        </div>
-      </div>
-      
-      <div class="feature-box mb-4">
-        <h3 class="feature-title">System Update 1.2</h3>
-        <p class="news-date">APR 15, 2024</p>
-        <div class="mb-3">
-          <p>We've updated our gacha system with new card animations and improved drop rates!</p>
-          <ul>
-            <li>New limited edition cards added</li>
-            <li>Improved gacha animations</li>
-            <li>Fixed bugs in tycoon mode</li>
-            <li>Added new events system</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="feature-box">
-        <h3 class="feature-title">Upcoming Collaborations</h3>
-        <p class="news-date">APR 10, 2024</p>
-        <div class="mb-3">
-          <p>Stay tuned for upcoming collaborations with other popular characters!</p>
-        </div>
+      <div id="dynamicNewsContainer">
+        <!-- News items will be dynamically inserted here -->
       </div>
     </div>
     
@@ -582,71 +553,8 @@
     <!-- События (изначально скрыты) -->
     <div id="eventsSection" style="display: none;">
       <h2 class="mb-4">Events</h2>
-      
-      <div class="feature-box mb-4">
-        <div class="row">
-          <div class="col-md-4">
-            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Summer Event" class="img-fluid rounded">
-          </div>
-          <div class="col-md-8">
-            <h3 class="feature-title">Summer Festival</h3>
-            <p class="news-date">APR 22 - MAY 6, 2024</p>
-            <p>Join our summer festival event and get exclusive Miku summer cards!</p>
-            <div class="progress mb-2">
-              <div class="progress-bar bg-success" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
-            </div>
-            <p>Event Points: 250/1000</p>
-            <button class="feature-button">Participate</button>
-          </div>
-        </div>
-      </div>
-      
-      <div class="feature-box mb-4">
-        <div class="row">
-          <div class="col-md-4">
-            <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Daily Login" class="img-fluid rounded">
-          </div>
-          <div class="col-md-8">
-            <h3 class="feature-title">Daily Login Bonus</h3>
-            <p class="news-date">Ongoing</p>
-            <p>Log in daily to receive gems, tickets, and special items!</p>
-            <div class="d-flex justify-content-between mb-3">
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2 position-relative">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 1" class="img-fluid">
-                  <div class="position-absolute top-0 end-0 bg-success text-white p-1 rounded">✓</div>
-                </div>
-                <small>Day 1</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2 position-relative">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 2" class="img-fluid">
-                  <div class="position-absolute top-0 end-0 bg-success text-white p-1 rounded">✓</div>
-                </div>
-                <small>Day 2</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 3" class="img-fluid">
-                </div>
-                <small>Day 3</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 4" class="img-fluid">
-                </div>
-                <small>Day 4</small>
-              </div>
-              <div class="text-center">
-                <div class="card-thumbnail mx-auto mb-2">
-                  <img src="мику_картинки/2db039bbccdcfe5bcb98d22685295dff.webp" alt="Day 5" class="img-fluid">
-                </div>
-                <small>Day 5</small>
-              </div>
-            </div>
-            <button class="feature-button">Claim Today's Reward</button>
-          </div>
-        </div>
+      <div id="dynamicEventsContainer">
+        <!-- Event items will be dynamically inserted here -->
       </div>
     </div>
     
@@ -947,7 +855,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="shareConcertResult()">
+          <button type="button" class="btn btn-primary" id="shareConcertResultButton">
             <i class="fas fa-share-alt me-2"></i> Share
           </button>
         </div>
@@ -955,6 +863,8 @@
     </div>
   </div>
 
+  <script src="data.js"></script>
+  <script src="render.js"></script>
   <script src="script.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

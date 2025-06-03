@@ -16,59 +16,90 @@ function showFeedback(message) {
 
 // Функции переключения между разделами
 function showHome() {
+    console.log("Показываем главную страницу");
     hideAllSections();
     document.getElementById('homeContent').style.display = 'block';
-    setActiveButton('showHome');
+    setActiveButton('navHome');
+    
+    // Отображаем последние новости на главной странице
+    renderHomeNews();
+    
+    // Обновляем информацию для тайкун-режима на главной странице
+    const homeTotalFans = document.getElementById('homeTotalFans');
+    const homeSongCount = document.getElementById('homeSongCount');
+    
+    if (homeTotalFans) homeTotalFans.textContent = totalFans;
+    if (homeSongCount) homeSongCount.textContent = songs.length;
   }
   
   function showGachaSystem() {
+    console.log("Показываем гача-систему");
     hideAllSections();
     document.getElementById('gachaSystem').style.display = 'block';
-    setActiveButton('showGachaSystem');
+    setActiveButton('navGacha');
   }
   
   function showCollection() {
+    console.log("Показываем коллекцию");
     hideAllSections();
     document.getElementById('cardCollection').style.display = 'block';
     updateCollection();
+    setActiveButton('navCollection');
   }
   
   function showTycoon() {
+    console.log("Показываем тайкун-режим");
     hideAllSections();
     document.getElementById('tycoonMode').style.display = 'block';
-    setActiveButton('showTycoon');
+    setActiveButton('navTycoon');
     
     // Инициализируем тайкун-систему, если это первый показ
     initTycoonSystem();
   }
   
   function showNews() {
+    console.log("Показываем новости");
     hideAllSections();
     document.getElementById('newsSection').style.display = 'block';
+    renderNews(sampleNewsData, 'dynamicNewsContainer');
+    setActiveButton('navNews');
   }
   
   function showShop() {
+    console.log("Показываем магазин");
     hideAllSections();
     document.getElementById('shopSection').style.display = 'block';
+    setActiveButton('navShop');
   }
   
   function showEvents() {
+    console.log("Показываем события");
     hideAllSections();
     document.getElementById('eventsSection').style.display = 'block';
+    renderEvents(sampleEventsData, 'dynamicEventsContainer');
+    setActiveButton('navEvents');
   }
   
   function showProfile() {
+    console.log("Показываем профиль");
     hideAllSections();
     document.getElementById('profileSection').style.display = 'block';
+    setActiveButton('navProfile');
   }
   
   function hideAllSections() {
+    console.log("Скрываем все секции");
     const sections = [
       'homeContent', 'gachaSystem', 'cardCollection', 'tycoonMode', 
       'newsSection', 'shopSection', 'eventsSection', 'profileSection'
     ];
     sections.forEach(section => {
-      document.getElementById(section).style.display = 'none';
+      const el = document.getElementById(section);
+      if (el) {
+        el.style.display = 'none';
+      } else {
+        console.warn(`Секция ${section} не найдена!`);
+      }
     });
   }
   
@@ -80,11 +111,16 @@ function showHome() {
   
   // Функция для выделения активного раздела
   function setActiveButton(buttonId) {
+    console.log(`Устанавливаем активную кнопку: ${buttonId}`);
     const buttons = document.querySelectorAll('#sideMenu .nav-link');
     buttons.forEach(button => button.classList.remove('active')); // Убираем активный класс у всех кнопок
-    const activeButton = document.querySelector(`#sideMenu .nav-link[onclick*="${buttonId}"]`);
+    
+    // Теперь находим непосредственно по id кнопки
+    const activeButton = document.getElementById(buttonId);
     if (activeButton) {
       activeButton.classList.add('active'); // Добавляем активный класс к текущей кнопке
+    } else {
+      console.warn(`Кнопка с id ${buttonId} не найдена!`);
     }
   }
   
@@ -257,10 +293,12 @@ function showHome() {
       if (i < currentTeam.length) {
         // Слот занят
         const member = currentTeam[i];
+        const currentStamina = member.stamina !== undefined ? member.stamina : (member.maxStamina || 100);
+        const currentMaxStamina = member.maxStamina || 100;
         teamSlot.innerHTML = `
           <img src="${member.imgUrl || member.img}" alt="${member.name}" class="img-fluid">
           <div class="position-absolute bottom-0 start-0 end-0 p-1 bg-dark bg-opacity-75 text-center">
-            <small>${member.rarity}★</small>
+            <small>${member.rarity}★ <span class="text-warning">${currentStamina}/${currentMaxStamina} STM</span></small>
           </div>
         `;
         teamSlot.setAttribute('data-index', i);
@@ -371,7 +409,8 @@ function showHome() {
             Power: ${card.power}<br>
             Beauty: ${card.beauty}<br>
             Charisma: ${card.charisma}<br>
-            Vocal: ${card.vocal}
+            Vocal: ${card.vocal}<br>
+            Stamina: ${card.stamina !== undefined ? card.stamina : (card.maxStamina || 100)}/${card.maxStamina || 100} STM
           `;
           
           // Добавляем бейдж с редкостью
@@ -474,12 +513,13 @@ function showHome() {
               <div class="tooltip-card">
                 ${member.name} (${member.rarity}★)<br>
                 P: ${member.power} | B: ${member.beauty}<br>
-                C: ${member.charisma} | V: ${member.vocal}
+                C: ${member.charisma} | V: ${member.vocal}<br>
+                STM: ${member.stamina !== undefined ? member.stamina : (member.maxStamina || 100)}/${member.maxStamina || 100}
               </div>
             </div>
             <div>
               <p class="mb-0">${member.name}</p>
-              <small class="text-muted">Rarity: ${member.rarity}★</small>
+              <small class="text-muted">Rarity: ${member.rarity}★ (${member.stamina !== undefined ? member.stamina : (member.maxStamina || 100)}/${member.maxStamina || 100} STM)</small>
               <div class="mt-1">
                 <button class="btn btn-sm btn-danger remove-member" data-index="${i}">Remove</button>
               </div>
@@ -597,7 +637,9 @@ function showHome() {
       beauty: card.beauty,
       charisma: card.charisma,
       vocal: card.vocal,
-      type: card.type
+      type: card.type,
+      stamina: card.stamina !== undefined ? card.stamina : (card.maxStamina || 100),
+      maxStamina: card.maxStamina || 100
     };
     
     if (slotIndex < currentTeam.length) {
@@ -657,9 +699,25 @@ function showHome() {
   // Функция для создания песни
   function produceSong() {
     // Получаем выбранный тип песни и его стоимость
+    const staminaCostSong = 20; 
+    if (currentTeam.length === 0 && staminaCostSong > 0) { 
+      // alert("You need a team to produce a song!"); // Alert if team is strictly required for songs with cost
+      // return; 
+    }
+    let canProduce = true;
+    for (const member of currentTeam) {
+      if (!member || member.stamina === undefined) {
+        console.error(`Error: ${member ? member.name : 'A team member'} has undefined stamina.`);
+        canProduce = false; break;
+      }
+      if (member.stamina < staminaCostSong) {
+        alert(`${member.name} is too tired to produce a new song. Needs ${staminaCostSong} STM, has ${member.stamina}.`);
+        canProduce = false; break;
+      }
+    }
+    if (!canProduce && currentTeam.length > 0) return;
+
     const songTypeSelect = document.getElementById('songType');
-    const songType = songTypeSelect.value;
-    let cost = 0;
     let baseQuality = 0;
     
     switch (songType) {
@@ -728,9 +786,18 @@ function showHome() {
     
     // Добавляем песню в список
     songs.push(song);
+
+    // Deduct stamina from team members
+    currentTeam.forEach(member => {
+      member.stamina -= staminaCostSong;
+    });
     
     // Обновляем отображение песен
     updateSongList();
+    updateTeamDisplay(); 
+    if (document.getElementById('teamModal') && document.getElementById('teamModal').classList.contains('show')) {
+        updateTeamModalContent();
+    }
     
     // Добавляем опыт студии
     addStudioExp(50 * songQuality);
@@ -1261,7 +1328,9 @@ function showHome() {
             beauty: beauty,
             charisma: charisma,
             vocal: vocal,
-            description: "A unique Miku character."
+            description: "A unique Miku character.",
+            maxStamina: 100, // Added
+            stamina: 100     // Added
         };
 
         // 3. Всегда добавляем карту в общую коллекцию (collection)
@@ -1461,31 +1530,32 @@ function showHome() {
   }
   
   // Добавляем обработчики событий для клонированных элементов коллекции
-  document.addEventListener('DOMContentLoaded', function() {
-    // Инициализируем некоторые карточки для демонстрации на главной странице
-    if (collection.length === 0) {
-      characters.forEach(char => {
-        collection.push({...char, 
-          power: Math.floor(Math.random() * 80) + 20,
-          beauty: Math.floor(Math.random() * 80) + 20,
-          charisma: Math.floor(Math.random() * 80) + 20,
-          vocal: Math.floor(Math.random() * 80) + 20,
-          description: "A starter Miku character."
-        });
-        
-        // Добавляем в список уникальных карт
-        if (!uniqueCards[char.img]) {
-          uniqueCards[char.img] = char;
-        }
-      });
-      
-      // Обновляем счетчик коллекции
-      updateCollectionCounter();
-    }
-    
-    // Инициализируем статистику тайкун-режима
-    updateTycoonStats();
-  });
+  // Удаляем этот обработчик DOMContentLoaded, так как он теперь в общем обработчике
+  // document.addEventListener('DOMContentLoaded', function() {
+  //   // Инициализируем некоторые карточки для демонстрации на главной странице
+  //   if (collection.length === 0) {
+  //     characters.forEach(char => {
+  //       collection.push({...char, 
+  //         power: Math.floor(Math.random() * 80) + 20,
+  //         beauty: Math.floor(Math.random() * 80) + 20,
+  //         charisma: Math.floor(Math.random() * 80) + 20,
+  //         vocal: Math.floor(Math.random() * 80) + 20,
+  //         description: "A starter Miku character."
+  //       });
+  //       
+  //       // Добавляем в список уникальных карт
+  //       if (!uniqueCards[char.img]) {
+  //         uniqueCards[char.img] = char;
+  //       }
+  //     });
+  //     
+  //     // Обновляем счетчик коллекции
+  //     updateCollectionCounter();
+  //   }
+  //   
+  //   // Инициализируем статистику тайкун-режима
+  //   updateTycoonStats();
+  // });
 
   // Функция для сбора наград за ежедневные задания
   function collectDailyTasks() {
@@ -1553,10 +1623,25 @@ function showHome() {
   // Функция для проведения концерта
   function startConcert() {
     // Получаем выбранную площадку
+    const staminaCostConcert = 30;
+    if (currentTeam.length === 0 && staminaCostConcert > 0) { 
+      // alert("You need a team to start a concert!");  // Alert if team is strictly required
+      // return;
+    }
+    let canPerform = true;
+    for (const member of currentTeam) {
+      if (!member || member.stamina === undefined) {
+        console.error(`Error: ${member ? member.name : 'A team member'} has undefined stamina.`);
+        canPerform = false; break;
+      }
+      if (member.stamina < staminaCostConcert) {
+        alert(`${member.name} is too tired for a concert. Needs ${staminaCostConcert} STM, has ${member.stamina}.`);
+        canPerform = false; break;
+      }
+    }
+    if (!canPerform && currentTeam.length > 0) return;
+
     const venueSelect = document.getElementById('concertVenue');
-    const venue = venueSelect.value;
-    
-    // Затраты и лимиты для разных площадок
     const venueCosts = {
       'small': 50,
       'medium': 200,
@@ -1723,7 +1808,18 @@ function showHome() {
     concertResultModalInstance.show();
     
     // Добавляем запись в лог
-    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGems} gems`);
+    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGemsConcert} gems`);
+    
+    // Deduct stamina from team members
+    currentTeam.forEach(member => {
+      member.stamina -= staminaCostConcert;
+    });
+
+    // recoverStaminaBenched(); // Will be added in next step
+    updateTeamDisplay(); 
+    if (document.getElementById('teamModal') && document.getElementById('teamModal').classList.contains('show')) {
+        updateTeamModalContent();
+    }
   }
 
   // Функция для "поделиться" результатами концерта
@@ -1841,50 +1937,398 @@ function showHome() {
     });
   });
 
-  // Добавляем обработчик для кнопки объяснения характеристик
-  document.getElementById('showStatsInfoBtn').addEventListener('click', function() {
-    // Создаем модальное окно с объяснением характеристик
-    const statsInfoModal = document.createElement('div');
-    statsInfoModal.className = 'modal fade';
-    statsInfoModal.id = 'statsInfoModal';
-    statsInfoModal.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Объяснение характеристик</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p><strong>Характеристики персонажей:</strong></p>
-            <ul class="stats-explanation">
-              <li><strong>P (Power/Сила)</strong>: Определяет общую эффективность персонажа в команде и влияет на успех выступлений. Чем выше сила, тем больше влияние персонажа на команду.</li>
-              <li><strong>B (Beauty/Красота)</strong>: Влияет на внешнюю привлекательность выступлений и способность привлекать определенную аудиторию. Персонажи с высокой красотой создают более зрелищные выступления.</li>
-              <li><strong>C (Charisma/Харизма)</strong>: Напрямую влияет на привлечение фанатов и удержание аудитории. Персонажи с высокой харизмой привлекают больше фанатов после выступлений.</li>
-              <li><strong>V (Vocal/Вокал)</strong>: Определяет качество создаваемых песен и их популярность. Хороший вокал позволяет создавать более успешные треки.</li>
-            </ul>
-            <div class="mt-3">
-              <p><strong>Как использовать характеристики:</strong></p>
-              <ul>
-                <li>Для создания хороших песен выбирайте персонажей с высоким значением Vocal</li>
-                <li>Для успешных концертов важна комбинация Beauty и Power</li>
-                <li>Для быстрого роста фан-базы ориентируйтесь на персонажей с высокой Charisma</li>
-                <li>Сбалансированная команда с разными сильными сторонами даст лучшие результаты</li>
-              </ul>
+  // --- Starry Parallax Background ---
+  function generateStars(numStars) {
+    const parallaxBg = document.querySelector('.parallax-bg');
+    if (!parallaxBg) return;
+
+    for (let i = 0; i < numStars; i++) {
+      const star = document.createElement('div');
+      star.classList.add('star');
+
+      const size = Math.random() * 3 + 1; // Star size between 1px and 4px
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.left = `${Math.random() * 100}%`;
+
+      // Random animation duration and delay
+      star.style.animationDuration = `${Math.random() * 3 + 2}s`; // 2s to 5s
+      star.style.animationDelay = `${Math.random() * 5}s`; // 0s to 5s
+
+      // Assign to a random layer
+      const layerType = Math.floor(Math.random() * 3) + 1;
+      let layerClass = `star-layer${layerType}`;
+      star.classList.add(layerClass);
+      
+      // Store the original Z transform for parallax calculation
+      // This assumes the translateZ value is set by the class star-layerX in CSS
+      let translateZValue = 0;
+      if (layerType === 1) translateZValue = -300;
+      else if (layerType === 2) translateZValue = -200;
+      else if (layerType === 3) translateZValue = -100;
+      star.dataset.translateZ = translateZValue;
+
+
+      parallaxBg.appendChild(star);
+    }
+  }
+
+  function initStarryParallax() {
+    const numStars = 100; // Number of stars to generate
+    generateStars(numStars);
+
+    const parallaxBg = document.querySelector('.parallax-bg');
+    if (!parallaxBg) return;
+
+    window.addEventListener('mousemove', function(event) {
+      const mouseX = (event.clientX - window.innerWidth / 2);
+      const mouseY = (event.clientY - window.innerHeight / 2);
+
+      const stars = document.querySelectorAll('.parallax-bg .star');
+      stars.forEach(star => {
+        const z = parseFloat(star.dataset.translateZ || 0);
+        // Parallax factor: closer stars (smaller negative Z) move more
+        // Adjust this factor to control the intensity of the parallax effect
+        const parallaxFactor = (1000 + z) / 20000; // Example factor, can be tuned
+
+        const offsetX = mouseX * parallaxFactor;
+        const offsetY = mouseY * parallaxFactor;
+
+        // Apply the parallax offset along with the original Z transform
+        star.style.transform = `translate3d(${offsetX}px, ${offsetY}px, ${z}px)`;
+      });
+    });
+  }
+  // --- End Starry Parallax Background ---
+
+// --- Event Listener Setup ---
+document.addEventListener('DOMContentLoaded', function() {
+  // Запускаем тесты, вызывая функцию из render.js
+  // runAllTests(); // Эта функция перенесена в render.js, закомментировано, чтобы избежать конфликтов
+  
+  // Очищаем все backdrop элементы при загрузке страницы
+  clearBackdrops();
+  
+  // Инициализируем некоторые карточки для демонстрации на главной странице
+  if (collection.length === 0) {
+    characters.forEach(char => {
+      collection.push({...char, 
+        power: Math.floor(Math.random() * 80) + 20,
+        beauty: Math.floor(Math.random() * 80) + 20,
+        charisma: Math.floor(Math.random() * 80) + 20,
+        vocal: Math.floor(Math.random() * 80) + 20,
+        description: "A starter Miku character."
+      });
+      
+      // Добавляем в список уникальных карт
+      if (!uniqueCards[char.img]) {
+        uniqueCards[char.img] = char;
+      }
+    });
+    
+    // Обновляем счетчик коллекции
+    updateCollectionCounter();
+  }
+  
+  // Инициализируем статистику тайкун-режима
+  updateTycoonStats();
+  
+  // Отображаем новости на главной странице при загрузке
+  renderHomeNews();
+  
+  // Header buttons
+  const headerLogoLink = document.getElementById('headerLogoLink');
+  if (headerLogoLink) {
+    console.log('Найдена кнопка headerLogoLink');
+    headerLogoLink.addEventListener('click', function(e) { 
+      e.preventDefault(); 
+      console.log('Нажата кнопка headerLogoLink');
+      showHome(); 
+    });
+  } else {
+    console.warn('Кнопка headerLogoLink не найдена!');
+  }
+  
+  const headerMenuButton = document.getElementById('headerMenuButton');
+  if (headerMenuButton) {
+    console.log('Найдена кнопка headerMenuButton');
+    headerMenuButton.addEventListener('click', function() {
+      console.log('Нажата кнопка headerMenuButton');
+      toggleMenu();
+    });
+  } else {
+    console.warn('Кнопка headerMenuButton не найдена!');
+  }
+
+  // Home page buttons
+  const homePlayNowButton = document.getElementById('homePlayNowButton');
+  if (homePlayNowButton) {
+    console.log('Найдена кнопка homePlayNowButton');
+    homePlayNowButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homePlayNowButton');
+      showGachaSystem();
+    });
+  } else {
+    console.warn('Кнопка homePlayNowButton не найдена!');
+  }
+  
+  const homeShowCollectionButton = document.getElementById('homeShowCollectionButton');
+  if (homeShowCollectionButton) {
+    console.log('Найдена кнопка homeShowCollectionButton');
+    homeShowCollectionButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowCollectionButton');
+      showCollection();
+    });
+  } else {
+    console.warn('Кнопка homeShowCollectionButton не найдена!');
+  }
+  
+  const homeShowNewsButton = document.getElementById('homeShowNewsButton');
+  if (homeShowNewsButton) {
+    console.log('Найдена кнопка homeShowNewsButton');
+    homeShowNewsButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowNewsButton');
+      showNews();
+    });
+  } else {
+    console.warn('Кнопка homeShowNewsButton не найдена!');
+  }
+  
+  const homeShowTycoonButton = document.getElementById('homeShowTycoonButton');
+  if (homeShowTycoonButton) {
+    console.log('Найдена кнопка homeShowTycoonButton');
+    homeShowTycoonButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowTycoonButton');
+      showTycoon();
+    });
+  } else {
+    console.warn('Кнопка homeShowTycoonButton не найдена!');
+  }
+  
+  const homeShowGachaButton = document.getElementById('homeShowGachaButton');
+  if (homeShowGachaButton) {
+    console.log('Найдена кнопка homeShowGachaButton');
+    homeShowGachaButton.addEventListener('click', function() {
+      console.log('Нажата кнопка homeShowGachaButton');
+      showGachaSystem();
+    });
+  } else {
+    console.warn('Кнопка homeShowGachaButton не найдена!');
+  }
+
+  // Side Menu buttons
+  const sideMenuCloseButton = document.getElementById('sideMenuCloseButton');
+  if (sideMenuCloseButton) sideMenuCloseButton.addEventListener('click', toggleMenu);
+
+  const navButtons = {
+    'navHome': showHome,
+    'navGacha': showGachaSystem,
+    'navCollection': showCollection,
+    'navTycoon': showTycoon,
+    'navNews': showNews,
+    'navShop': showShop,
+    'navEvents': showEvents,
+    'navProfile': showProfile
+  };
+
+  Object.entries(navButtons).forEach(([id, handler]) => {
+    const button = document.getElementById(id);
+    if (button) {
+      button.addEventListener('click', () => {
+        handler();
+        toggleMenu(); // Close menu after navigation
+      });
+    }
+  });
+  
+  // Добавляем обработчик на кнопку "Забрать"
+  const collectButton = document.getElementById('collectGachaButton');
+  if (collectButton) {
+    collectButton.addEventListener('click', function() {
+      if (lastPulledCardsData.length > 0) {
+        // Отображаем карты в основном контейнере
+        displayPulledCards(lastPulledCardsData, 'gachaResults'); 
+
+        // Обновляем счетчики и коллекцию
+        updateCollection();
+        updateCollectionCounter();
+        updateTycoonStats(); // Обновляем все статы, включая гемы
+      }
+
+      // Закрываем модальное окно
+      if (gachaPullModalInstance) {
+        gachaPullModalInstance.hide();
+      }
+
+      // Очищаем временные данные
+      lastPulledCardsData = [];
+    });
+  }
+  
+  // Обработчик изменения цены билета
+  const ticketPriceSlider = document.getElementById('ticketPrice');
+  const ticketPriceValue = document.getElementById('ticketPriceValue');
+  
+  if (ticketPriceSlider && ticketPriceValue) {
+    ticketPriceSlider.addEventListener('input', function() {
+      ticketPriceValue.textContent = this.value;
+    });
+  }
+  
+  // Добавляем обработчик для кнопки сохранения команды
+  const saveTeamButton = document.getElementById('saveTeam');
+  if (saveTeamButton) {
+    saveTeamButton.addEventListener('click', function() {
+      // Закрываем модальное окно
+      if (teamModalInstance) {
+        teamModalInstance.hide();
+      }
+      
+      // Пересчитываем бонусы команды
+      calculateTeamBonuses();
+      
+      // Обновляем отображение команды
+      updateTeamDisplay();
+      
+      // Показываем сообщение об успешном сохранении
+      showFeedback('Team composition saved!');
+      
+      // Добавляем запись в лог
+      updateActivityLog('Team Updated', 'Your team composition has been updated');
+    });
+  }
+  
+  // Добавляем обработчики для всех модальных окон, чтобы правильно удалять backdrop
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function() {
+      // Небольшая задержка перед очисткой, чтобы анимация успела завершиться
+      setTimeout(clearBackdrops, 100);
+    });
+  });
+  
+  // Анимируем элементы при загрузке
+  animateElementsOnLoad();
+  
+  // Добавляем эффект параллакса для фона
+  document.addEventListener('mousemove', function(e) {
+    const moveX = (e.clientX - window.innerWidth / 2) / 50;
+    const moveY = (e.clientY - window.innerHeight / 2) / 50;
+    
+    document.querySelectorAll('.musical-particle-1, .musical-particle-2, .musical-particle-3, .musical-particle-4, .musical-particle-5, .floating-note').forEach(particle => {
+      particle.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    });
+  });
+
+  // Initialize Starry Parallax Background
+  initStarryParallax();
+  
+  // Show stats info button functionality
+  const showStatsInfoBtn = document.getElementById('showStatsInfoBtn');
+  if (showStatsInfoBtn) {
+    showStatsInfoBtn.addEventListener('click', function() {
+      let statsModal;
+      const existingModal = document.getElementById('statsInfoModal');
+      if (existingModal) {
+        statsModal = bootstrap.Modal.getInstance(existingModal);
+      } else {
+        const statsInfoModalDiv = document.createElement('div');
+        statsInfoModalDiv.className = 'modal fade';
+        statsInfoModalDiv.id = 'statsInfoModal';
+        statsInfoModalDiv.innerHTML = `
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Character Stats Explanation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <h6>Power</h6>
+                <p>Determines the character's overall strength and influence in performances.</p>
+                
+                <h6>Beauty</h6>
+                <p>Affects visual appeal and stage presence during concerts.</p>
+                
+                <h6>Charisma</h6>
+                <p>Influences fan engagement and crowd interaction.</p>
+                
+                <h6>Vocal</h6>
+                <p>Represents singing ability and musical talent.</p>
+                
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>Higher stats will improve your concert performance and fan gains!
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
             </div>
           </div>
-        </div>
+        `;
+        document.body.appendChild(statsInfoModalDiv);
+        statsModal = new bootstrap.Modal(statsInfoModalDiv);
+        statsInfoModalDiv.addEventListener('hidden.bs.modal', function() {
+          document.body.removeChild(statsInfoModalDiv); // Clean up modal from DOM after it's hidden
+        });
+      }
+      statsModal.show();
+    });
+  }
+  
+  // Вывод в консоль для отладки
+  console.log("DOMContentLoaded: Инициализация завершена");
+});
+// --- End Event Listener Setup ---
+
+// Функция для отображения новостей на главной странице
+function renderHomeNews() {
+  const newsContainer = document.getElementById('homeNewsBox');
+  if (!newsContainer) {
+    console.error('Контейнер новостей на главной странице не найден!');
+    return;
+  }
+
+  // Сохраняем заголовок
+  const title = newsContainer.querySelector('.feature-title');
+  
+  // Очищаем контейнер, сохраняя заголовок
+  newsContainer.innerHTML = '';
+  if (title) {
+    newsContainer.appendChild(title);
+  } else {
+    const newTitle = document.createElement('h3');
+    newTitle.className = 'feature-title';
+    newTitle.textContent = 'NEWS';
+    newsContainer.appendChild(newTitle);
+  }
+
+  // Отображаем только 2 последние новости для главной страницы
+  const latestNews = sampleNewsData.slice(0, 2);
+  
+  latestNews.forEach(news => {
+    const newsItem = document.createElement('div');
+    newsItem.className = 'news-item';
+    
+    newsItem.innerHTML = `
+      <p>${news.title}</p>
+      <p class="news-date">${news.date}</p>
+      <div class="dots-indicator">
+        <span class="dot active"></span>
+        <span class="dot"></span>
       </div>
     `;
     
-    // Добавляем модальное окно в DOM
-    document.body.appendChild(statsInfoModal);
-    
-    // Показываем модальное окно
-    const modal = new bootstrap.Modal(statsInfoModal);
-    modal.show();
-    
-    // Удаляем модальное окно после закрытия
-    statsInfoModal.addEventListener('hidden.bs.modal', function() {
-      document.body.removeChild(statsInfoModal);
-    });
+    newsContainer.appendChild(newsItem);
   });
+  
+  // Добавляем кнопку для перехода в раздел новостей
+  const button = document.createElement('button');
+  button.className = 'feature-button mt-2';
+  button.id = 'homeShowNewsButton';
+  button.textContent = 'NEWS';
+  button.addEventListener('click', showNews);
+  
+  newsContainer.appendChild(button);
+}
