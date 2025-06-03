@@ -1,32 +1,58 @@
 // Функция для отображения тостов (всплывающих уведомлений)
 function showToast(message, type = 'info', duration = 3000) {
-  const toastContainer = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
+  // Создаем уникальный ID для тоста
+  const toastId = 'toast-' + Date.now();
   
-  const content = document.createElement('div');
-  content.className = 'toast-content';
-  content.textContent = message;
+  // Определяем класс для типа уведомления
+  const typeClass = `toast-${type}`;
   
-  const closeButton = document.createElement('button');
-  closeButton.className = 'toast-close';
-  closeButton.innerHTML = '&times;';
-  closeButton.onclick = () => {
-    toast.style.animation = 'fadeOut 0.3s ease-out';
-    toast.addEventListener('animationend', () => toast.remove());
-  };
+  // Создаем элемент тоста
+  const toastElement = document.createElement('div');
+  toastElement.className = `toast custom-toast ${typeClass} show`;
+  toastElement.setAttribute('role', 'alert');
+  toastElement.setAttribute('aria-live', 'assertive');
+  toastElement.setAttribute('aria-atomic', 'true');
+  toastElement.id = toastId;
   
-  toast.appendChild(content);
-  toast.appendChild(closeButton);
-  toastContainer.appendChild(toast);
+  // Добавляем иконку в зависимости от типа
+  let iconClass = 'info-circle';
+  if (type === 'success') iconClass = 'check-circle';
+  if (type === 'error') iconClass = 'exclamation-circle';
+  if (type === 'warning') iconClass = 'exclamation-triangle';
   
-  // Автоматически удаляем тост через указанное время
-  setTimeout(() => {
-    if (toast.parentElement) {
-      toast.style.animation = 'fadeOut 0.3s ease-out';
-      toast.addEventListener('animationend', () => toast.remove());
-    }
-  }, duration);
+  // Формируем содержимое тоста
+  toastElement.innerHTML = `
+    <div class="toast-header bg-transparent border-0 text-white">
+      <i class="fas fa-${iconClass} me-2"></i>
+      <strong class="me-auto">Уведомление</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      ${message}
+    </div>
+  `;
+  
+  // Добавляем тост в контейнер
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.appendChild(toastElement);
+    
+    // Создаем экземпляр Toast из Bootstrap
+    const toast = new bootstrap.Toast(toastElement, {
+      autohide: true,
+      delay: duration
+    });
+    
+    // Показываем тост
+    toast.show();
+    
+    // Удаляем тост из DOM после скрытия
+    toastElement.addEventListener('hidden.bs.toast', function() {
+      toastElement.remove();
+    });
+  } else {
+    console.error('Toast container not found!');
+  }
 }
 
 // Обновленная функция для отображения обратной связи при добавлении карточки
@@ -699,22 +725,57 @@ function showHome() {
 
   // Функция для удаления члена команды
   function removeTeamMember(index) {
-    if (!teamMembers[index]) return; // Добавляем проверку на существование члена команды
+    const removeMemberDialog = document.createElement('div');
+    removeMemberDialog.className = 'card-feedback';
+    removeMemberDialog.innerHTML = `
+      <div class="d-flex align-items-center">
+        <span>Удалить ${currentTeam[index].name} из команды?</span>
+        <button class="btn btn-sm btn-danger ms-2 confirm-remove">Удалить</button>
+        <button class="btn btn-sm btn-secondary ms-2 cancel-remove">Отмена</button>
+      </div>
+    `;
     
-    const removedMember = teamMembers[index];
-    teamMembers[index] = null;
+    document.body.appendChild(removeMemberDialog);
     
-    // Обновляем отображение команды
-    updateTeamDisplay();
+    // Добавляем обработчики событий
+    removeMemberDialog.querySelector('.confirm-remove').addEventListener('click', () => {
+      // Удаляем члена команды
+      currentTeam.splice(index, 1);
+      
+      // Пересчитываем бонусы команды
+      calculateTeamBonuses();
+      
+      // Обновляем отображение команды
+      updateTeamDisplay();
+      
+      // Добавляем запись в лог и показываем уведомление
+      updateActivityLog('Team Member Removed', 'A member has been removed from your team');
+      showToast('Персонаж удален из команды', 'info');
+      
+      // Удаляем диалог
+      removeMemberDialog.style.animation = 'fade-out 0.3s ease-out';
+      removeMemberDialog.addEventListener('animationend', () => {
+        removeMemberDialog.remove();
+      });
+    });
     
-    // Обновляем бонусы команды
-    calculateTeamBonuses();
+    removeMemberDialog.querySelector('.cancel-remove').addEventListener('click', () => {
+      // Удаляем диалог
+      removeMemberDialog.style.animation = 'fade-out 0.3s ease-out';
+      removeMemberDialog.addEventListener('animationend', () => {
+        removeMemberDialog.remove();
+      });
+    });
     
-    // Показываем уведомление
-    showToast(`Removed ${removedMember.name} from the team`, 'info');
-    
-    // Обновляем содержимое модального окна команды
-    updateTeamModalContent();
+    // Автоматически удаляем через 5 секунд, если пользователь не отреагировал
+    setTimeout(() => {
+      if (document.body.contains(removeMemberDialog)) {
+        removeMemberDialog.style.animation = 'fade-out 0.3s ease-out';
+        removeMemberDialog.addEventListener('animationend', () => {
+          removeMemberDialog.remove();
+        });
+      }
+    }, 5000);
   }
 
   // Функция для расчета бонусов команды
@@ -756,37 +817,131 @@ function showHome() {
   // Функция для создания песни
   function produceSong() {
     const songType = document.getElementById('songType').value;
-    let cost, quality;
-
-    // Определяем параметры песни
-    switch(songType) {
-      case 'pop': cost = 100; quality = 2; break;
-      case 'rock': cost = 200; quality = 3; break;
-      case 'ballad': cost = 300; quality = 4; break;
-      case 'dance': cost = 400; quality = 3; break;
+    let cost;
+    // Получаем выбранный тип песни и его стоимость
+    const staminaCostSong = 20; 
+    if (currentTeam.length === 0 && staminaCostSong > 0) { 
+      // showToast("Для создания песни нужна команда!", 'warning'); // Alert if team is strictly required for songs with cost
+      // return; 
     }
+    let canProduce = true;
+    for (const member of currentTeam) {
+      if (!member) {
+        console.error('Ошибка: undefined член команды в currentTeam');
+        canProduce = false; 
+        break;
+      }
+      
+      if (member.stamina === undefined) {
+        console.error(`Ошибка: ${member.name || 'Персонаж'} имеет undefined stamina.`);
+        canProduce = false; 
+        break;
+      }
+      
+      if (member.stamina < staminaCostSong) {
+        showToast(`${member.name || 'Персонаж'} слишком устал(а) для создания песни. Нужно ${staminaCostSong} энергии, есть ${member.stamina}.`, 'warning');
+        canProduce = false; 
+        break;
+      }
+    }
+    if (!canProduce && currentTeam.length > 0) return;
 
-    // Проверяем гемы
+    const songTypeSelect = document.getElementById('songType');
+    let baseQuality = 0;
+    
+    switch (songType) {
+      case 'pop':
+        cost = 100;
+        baseQuality = 1;
+        break;
+      case 'rock':
+        cost = 200;
+        baseQuality = 2;
+        break;
+      case 'ballad':
+        cost = 300;
+        baseQuality = 3;
+        break;
+      case 'dance':
+        cost = 400;
+        baseQuality = 4;
+        break;
+    }
+    
+    // Проверяем, хватает ли гемов
     if (totalGems < cost) {
-      showToast(`Недостаточно гемов! Нужно ${cost}💎`, 'error');
+      showToast(`Недостаточно гемов! Нужно ${cost}💎, у вас ${totalGems}💎`, 'error');
       return;
     }
-
-    // Создаем песню
-    const newSong = {
-      name: `Песня #${songs.length + 1}`, // Пример названия
-      quality: quality,
-      type: songType
-    };
-
-    // Добавляем в массив
-    songs.push(newSong);
+    
+    // Снимаем стоимость
     totalGems -= cost;
+    
+    // Рассчитываем качество песни с учетом бонуса
+    let songQuality = baseQuality;
+    if (teamBonuses.songQuality > 0) {
+      // Улучшаем качество песни на основе бонуса
+      songQuality += Math.floor(teamBonuses.songQuality / 20);
+    }
+    
+    // Ограничиваем качество песни до 5
+    songQuality = Math.min(songQuality, 5);
+    
+    // Создаем название песни
+    const songNames = [
+      'Melody of Dreams', 'Digital Heart', 'Electro Harmony', 
+      'Future Vision', 'Cyber Angel', 'Crystal Voice', 
+      'Neon Destiny', 'Virtual Love', 'Digital Heartbeat', 'Pixel Tears'
+    ];
+    
+    const songTypeNames = {
+      'pop': 'Pop',
+      'rock': 'Rock',
+      'ballad': 'Ballad',
+      'dance': 'Dance'
+    };
+    
+    const randomName = songNames[Math.floor(Math.random() * songNames.length)];
+    const songName = `${randomName} (${songTypeNames[songType]})`;
+    
+    // Создаем объект песни
+    const song = {
+      id: Date.now(),
+      name: songName,
+      type: songType,
+      quality: songQuality,
+      performCount: 0
+    };
+    
+    // Добавляем песню в список
+    songs.push(song);
 
-    // Обновляем интерфейс
-    updateConcertSongList();
+    // Deduct stamina from team members
+    currentTeam.forEach(member => {
+      member.stamina -= staminaCostSong;
+    });
+    
+    // Обновляем отображение песен
+    updateSongList();
+    updateTeamDisplay(); 
+    if (document.getElementById('teamModal') && document.getElementById('teamModal').classList.contains('show')) {
+        updateTeamModalContent();
+    }
+    
+    // Добавляем опыт студии
+    addStudioExp(50 * songQuality);
+    
+    // Обновляем статистику
     updateTycoonStats();
-    showToast(`Создана новая песня: ${newSong.name}`, 'success');
+    
+    // Отмечаем ежедневную задачу, если она не выполнена
+    if (!dailyTasks.composeSong) {
+      dailyTasks.composeSong = true;
+      document.getElementById('task2').checked = true;
+    }
+    
+    // Добавляем запись в лог
+    updateActivityLog(`New Song Created`, `Created "${songName}" (${songQuality}★)`);
   }
 
   // Функция для обновления списка песен
@@ -1510,50 +1665,50 @@ function showHome() {
   function collectDailyTasks() {
     let totalReward = 0;
     let gachaTickets = 0;
-    let rewards = [];
+    let message = 'Collected rewards: ';
     
     // Проверяем каждое задание
     if (dailyTasks.completeConcert) {
       totalReward += 50;
-      rewards.push('50💎 за концерт');
+      message += '50💎 for concert, ';
     }
     
     if (dailyTasks.composeSong) {
       totalReward += 100;
-      rewards.push('100💎 за песню');
+      message += '100💎 for song, ';
     }
     
     if (dailyTasks.gainFans) {
       totalReward += 100;
       gachaTickets += 1;
-      rewards.push('100💎 + 1 билет за фанатов');
+      message += '100💎 + 1 ticket for fans, ';
     }
     
-    // Если есть награды
-    if (rewards.length > 0) {
-      // Добавляем гемы
+    // Если хотя бы одно задание выполнено
+    if (totalReward > 0) {
+      // Добавляем награды
       totalGems += totalReward;
       
-      // Добавляем билеты
-      gachaTickets += gachaTickets;
+      // Сбрасываем задания и чекбоксы
+      dailyTasks.completeConcert = false;
+      dailyTasks.composeSong = false;
+      dailyTasks.gainFans = false;
       
-      // Обновляем статистику
+      document.getElementById('task1').checked = false;
+      document.getElementById('task2').checked = false;
+      document.getElementById('task3').checked = false;
+      
+      // Обрезаем запятую и пробел в конце сообщения
+      message = message.slice(0, -2);
+      
+      // Показываем сообщение и обновляем статистику
+      showToast(`${message}. Total: ${totalReward}💎${gachaTickets > 0 ? ' + ' + gachaTickets + ' gacha ticket(s)' : ''}`, 'success');
       updateTycoonStats();
       
-      // Сбрасываем задания
-      dailyTasks = {
-        completeConcert: false,
-        composeSong: false,
-        gainFans: false
-      };
-      
-      // Показываем уведомление
-      showToast(`Собраны награды: ${rewards.join(', ')}`, 'success');
-      
       // Добавляем запись в лог
-      updateActivityLog('Daily Tasks Completed', `Collected ${totalReward}💎 and ${gachaTickets} tickets`);
+      updateActivityLog('Daily Tasks Completed', `Received ${totalReward}💎${gachaTickets > 0 ? ' + ' + gachaTickets + ' ticket(s)' : ''}`);
     } else {
-      showToast('Нет выполненных заданий для сбора наград', 'info');
+      showToast('Нет выполненных заданий для получения наград.', 'info');
     }
   }
 
@@ -1571,90 +1726,223 @@ function showHome() {
 
   // Функция для проведения концерта
   function startConcert() {
-    console.log("Функция startConcert вызвана"); // Лог для отладки
-
-    // Проверяем, инициализирован ли массив песен
-    if (!songs || songs.length === 0) {
-      console.error("Массив песен (songs) пуст или не определен");
-      showToast("Нет доступных песен для концерта", "error");
-      return;
+    // Получаем выбранную площадку
+    const staminaCostConcert = 30;
+    if (currentTeam.length === 0 && staminaCostConcert > 0) { 
+      showToast("Для концерта рекомендуется иметь команду!", 'warning');
+      // Не прерываем выполнение, даем возможность продолжить
     }
+    
+    let canPerform = true;
+    for (const member of currentTeam) {
+      if (!member || member.stamina === undefined) {
+        console.error(`Ошибка: ${member ? member.name || 'Персонаж' : 'Член команды'} имеет undefined stamina.`);
+        canPerform = false; 
+        break;
+      }
+      
+      if (member.stamina < staminaCostConcert) {
+        showToast(`${member.name || 'Персонаж'} слишком устал(а) для концерта. Нужно ${staminaCostConcert} энергии, есть ${member.stamina}.`, 'warning');
+        canPerform = false; 
+        break;
+      }
+    }
+    
+    if (!canPerform && currentTeam.length > 0) return;
 
-    // Получаем выбранные значения
     const venueSelect = document.getElementById('concertVenue');
-    const songSelect = document.getElementById('concertSong');
-    const ticketPriceInput = document.getElementById('ticketPrice');
-
-    // Проверяем, существуют ли элементы DOM
-    if (!venueSelect || !songSelect || !ticketPriceInput) {
-      console.error("Не найдены элементы DOM для концерта");
-      showToast("Ошибка: не найдены настройки концерта", "error");
+    if (!venueSelect) {
+      showToast('Ошибка: не найден элемент выбора площадки', 'error');
       return;
     }
-
-    const venue = venueSelect.value;
-    const selectedSongName = songSelect.value;
-    const ticketPrice = parseInt(ticketPriceInput.value);
-
-    // Находим выбранную песню
-    const selectedSong = songs.find(song => song.name === selectedSongName);
-    if (!selectedSong) {
-      console.error("Песня не найдена:", selectedSongName);
-      showToast("Пожалуйста, выберите песню", "error");
-      return;
-    }
-
-    // Параметры площадки
-    const venueParams = {
-      small: { cost: 50, maxFans: 100 },
-      medium: { cost: 200, maxFans: 500 },
-      large: { cost: 500, maxFans: 2000 },
-      arena: { cost: 1000, maxFans: 5000, minLevel: 5 },
-      stadium: { cost: 2000, maxFans: 10000, minLevel: 10 }
+    
+    const selectedVenue = venueSelect.value || 'small'; // Получаем значение выбранной площадки или используем 'small' по умолчанию
+    
+    const venueCosts = {
+      'small': 50,
+      'medium': 200,
+      'large': 500,
+      'arena': 1000,
+      'stadium': 2000
     };
-
-    // Проверяем уровень студии для арены/стадиона
-    const venueInfo = venueParams[venue];
-    if (venueInfo.minLevel && studioLevel < venueInfo.minLevel) {
-      showToast(`Для этой площадки требуется уровень студии ${venueInfo.minLevel}`, "error");
+    
+    const venueMaxFans = {
+      'small': 100,
+      'medium': 500,
+      'large': 2000,
+      'arena': 5000,
+      'stadium': 10000
+    };
+    
+    const venueNames = {
+      'small': 'Small Venue',
+      'medium': 'Medium Venue',
+      'large': 'Large Venue',
+      'arena': 'Arena',
+      'stadium': 'Stadium'
+    };
+    
+    // Проверяем, достаточно ли гемов
+    if (totalGems < venueCosts[selectedVenue]) {
+      showToast(`Недостаточно гемов! Нужно ${venueCosts[selectedVenue]}💎, у вас ${totalGems}💎`, 'error');
       return;
     }
-
-    // Проверяем гемы
-    if (totalGems < venueInfo.cost) {
-      showToast(`Недостаточно гемов. Нужно: ${venueInfo.cost}`, "error");
-      return;
+    
+    // Получаем выбранную песню
+    const songSelect = document.getElementById('concertSong');
+    let selectedSong;
+    
+    if (songSelect && songSelect.value !== 'default') {
+      const songId = parseInt(songSelect.value);
+      selectedSong = songs.find(song => song.id === songId);
+    } else {
+      // Если нет выбранной песни, используем демо-песню
+      selectedSong = {
+        name: 'Example Song',
+        quality: 3,
+        type: 'pop'
+      };
     }
-
-    // Рассчитываем фанатов и доход
-    let fanGain = Math.floor(venueInfo.maxFans * (selectedSong.quality / 5));
-    if (teamBonuses.fanGain) {
-      fanGain = Math.floor(fanGain * (1 + teamBonuses.fanGain / 100));
+    
+    // Получаем цену билета
+    const ticketPrice = parseInt(document.getElementById('ticketPrice').value);
+    
+    // Снимаем стоимость аренды площадки
+    totalGems -= venueCosts[selectedVenue];
+    
+    // Рассчитываем базовое количество привлеченных фанатов
+    let baseFans = Math.floor(Math.random() * (venueMaxFans[selectedVenue] / 2)) + Math.floor(venueMaxFans[selectedVenue] / 2);
+    
+    // Корректируем на основе цены билета
+    // Чем выше цена, тем меньше фанатов, но больше доход
+    const priceMultiplier = 1 - ((ticketPrice - 10) / 100);
+    baseFans = Math.floor(baseFans * priceMultiplier);
+    
+    // Применяем бонус качества песни
+    baseFans = Math.floor(baseFans * (1 + (selectedSong.quality * 0.1)));
+    
+    // Применяем бонус команды
+    if (teamBonuses.fanGain > 0) {
+      baseFans = Math.floor(baseFans * (1 + (teamBonuses.fanGain / 100)));
     }
-    const earnings = Math.floor(fanGain * ticketPrice * 0.8);
-
-    // Обновляем данные
-    totalGems -= venueInfo.cost;
-    totalGems += earnings;
-    totalFans += fanGain;
-    totalConcerts++;
-
+    
+    // Проверяем на максимум для площадки
+    const actualFans = Math.min(baseFans, venueMaxFans[selectedVenue]);
+    
+    // Рассчитываем заработанные гемы
+    let earnedGems = Math.floor(actualFans * (ticketPrice / 10));
+    
+    // Применяем бонус команды к выступлению
+    if (teamBonuses.performance > 0) {
+      earnedGems = Math.floor(earnedGems * (1 + (teamBonuses.performance / 100)));
+    }
+    
+    // Добавляем фанатов и гемы
+    totalFans += actualFans;
+    totalGems += earnedGems;
+    totalConcerts += 1;
+    
+    // Добавляем опыт студии
+    addStudioExp(100 + (selectedSong.quality * 20));
+    
+    // Обновляем ранг студии
+    updateStudioRank();
+    
+    // Отмечаем ежедневную задачу, если она не выполнена
+    if (!dailyTasks.completeConcert) {
+      dailyTasks.completeConcert = true;
+      document.getElementById('task1').checked = true;
+    }
+    
+    // Проверяем выполнение задания по привлечению фанатов
+    if (!dailyTasks.gainFans && actualFans >= 100) {
+      dailyTasks.gainFans = true;
+      document.getElementById('task3').checked = true;
+    }
+    
     // Обновляем статистику
     updateTycoonStats();
+    
+    // Генерируем рейтинг выступления
+    let performanceRating = '';
+    let ratingStars = '';
+    let performanceComment = '';
+    
+    // Качество выступления зависит от количества фанатов относительно максимума
+    const performanceQuality = actualFans / venueMaxFans[selectedVenue];
+    
+    if (performanceQuality >= 0.9) {
+      performanceRating = 'Outstanding!';
+      ratingStars = '★★★★★';
+      performanceComment = 'The performance was a huge success! The fans loved every moment!';
+    } else if (performanceQuality >= 0.7) {
+      performanceRating = 'Great!';
+      ratingStars = '★★★★☆';
+      performanceComment = 'The performance was very successful! Most fans really enjoyed it!';
+    } else if (performanceQuality >= 0.5) {
+      performanceRating = 'Good!';
+      ratingStars = '★★★☆☆';
+      performanceComment = 'The performance was good! The fans enjoyed the show.';
+    } else if (performanceQuality >= 0.3) {
+      performanceRating = 'Average';
+      ratingStars = '★★☆☆☆';
+      performanceComment = 'The performance was average. Some fans seemed to enjoy it.';
+    } else {
+      performanceRating = 'Poor';
+      ratingStars = '★☆☆☆☆';
+      performanceComment = 'The performance was not very good. Few fans enjoyed it.';
+    }
+    
+    // Заполняем данные в модальном окне результатов
+    document.getElementById('concertVenueName').textContent = venueNames[selectedVenue];
+    document.getElementById('concertSongName').textContent = `Song: ${selectedSong.name}`;
+    document.getElementById('concertFans').textContent = `+${actualFans}`;
+    document.getElementById('concertGems').textContent = `+${earnedGems}`;
+    document.getElementById('performanceRating').textContent = performanceRating;
+    document.getElementById('ratingStars').textContent = ratingStars;
+    document.getElementById('performanceComment').textContent = performanceComment;
+    
+    // Закрываем старое модальное окно, если оно открыто
+    if (concertResultModalInstance) {
+      concertResultModalInstance.hide();
+      clearBackdrops();
+      concertResultModalInstance = null;
+    }
+    
+    // Очищаем любые существующие backdrop элементы
+    clearBackdrops();
+    
+    // Показываем модальное окно с результатами
+    const concertResultModalElement = document.getElementById('concertResultModal');
+    concertResultModalInstance = new bootstrap.Modal(concertResultModalElement);
+    
+    // Добавляем обработчик на закрытие модального окна
+    concertResultModalElement.addEventListener('hidden.bs.modal', function() {
+      clearBackdrops();
+    }, { once: true });
+    
+    concertResultModalInstance.show();
+    
+    // Добавляем запись в лог
+    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGems} gems`);
+    
+    // Деплитим выносливость у членов команды
+    currentTeam.forEach(member => {
+      if (member && member.stamina !== undefined) {
+        member.stamina -= staminaCostConcert;
+      }
+    });
 
-    // Заполняем модальное окно
-    document.getElementById('concertVenueName').textContent = venue;
-    document.getElementById('concertSongName').textContent = selectedSong.name;
-    document.getElementById('concertFans').textContent = `+${fanGain}`;
-    document.getElementById('concertGems').textContent = `+${earnings}`;
-
-    // Показываем модальное окно
-    const modal = new bootstrap.Modal(document.getElementById('concertResultModal'));
-    modal.show();
-
-    // Логируем успех
-    console.log("Концерт завершен успешно");
-    showToast(`Концерт завершен! +${fanGain} фанатов`, "success");
+    // Обновляем отображение команды
+    updateTeamDisplay();
+    if (document.getElementById('teamModal') && document.getElementById('teamModal').classList.contains('show')) {
+      updateTeamModalContent();
+    }
+    
+    // Добавляем запись в лог
+    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGems} gems`);
+    
+    // Показываем модальное окно с результатами
   }
 
   // Функция для "поделиться" результатами концерта
@@ -2187,11 +2475,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.warn('Кнопка produceSongButton не найдена!');
   }
   
-  // Находим кнопку и добавляем обработчик
-  document.getElementById('startConcertButton')?.addEventListener('click', function() {
-    console.log('Кнопка startConcertButton нажата'); // Лог для отладки
-    startConcert();
-  });
+  const startConcertButton = document.getElementById('startConcertButton');
+  if (startConcertButton) {
+    startConcertButton.addEventListener('click', function() {
+      console.log('Нажата кнопка startConcertButton');
+      startConcert();
+    });
+  } else {
+    console.warn('Кнопка startConcertButton не найдена!');
+  }
   
   const collectDailyTasksButton = document.getElementById('collectDailyTasksButton');
   if (collectDailyTasksButton) {
@@ -2266,33 +2558,4 @@ function renderHomeNews() {
   button.addEventListener('click', showNews);
   
   newsContainer.appendChild(button);
-}
-
-// Добавляем обработчик после загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-  const startConcertButton = document.getElementById('startConcertButton');
-  if (startConcertButton) {
-    startConcertButton.addEventListener('click', function() {
-      console.log('Кнопка startConcertButton нажата'); // Лог для отладки
-      startConcert();
-    });
-  } else {
-    console.error('Кнопка startConcertButton не найдена в DOM');
-  }
-});
-
-function updateConcertSongList() {
-  const songSelect = document.getElementById('concertSong');
-  if (!songSelect) return;
-
-  // Очищаем текущий список (кроме первого пункта "Example Song")
-  songSelect.innerHTML = '<option value="default">Example Song (★★★)</option>';
-
-  // Добавляем все песни из массива songs
-  songs.forEach(song => {
-    const option = document.createElement('option');
-    option.value = song.name; // Используем name как уникальный идентификатор
-    option.textContent = `${song.name} (${'★'.repeat(song.quality)})`;
-    songSelect.appendChild(option);
-  });
 }

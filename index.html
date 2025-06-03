@@ -21,12 +21,11 @@
     color: white;
     padding: 8px;
     border-radius: 5px;
-    font-size: 9px;
+    font-size: 10px;
     white-space: nowrap;
-    top: 50%;
-    left: 90%;
-    transform: translateY(-50%);
-    margin-left: 10px;
+    top: 10px;
+    left: 210%;
+    transform: translateX(-50%);
     pointer-events: none;
     }
     .tooltip-card {
@@ -50,25 +49,6 @@
     /* Убедимся, что контейнер для карточек имеет относительное позиционирование */
     #cardSelection {
         position: relative; /* Это может помочь с позиционированием дочерних absolute элементов */
-    }
-
-    /* Стили для вертикального расположения карточек в выборе */
-    .card-selection {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .card-option {
-        width: 100%;
-        max-width: 200px;
-        height: auto;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
-
-    .card-option:hover {
-        transform: scale(1.05);
     }
   </style>
 </head>
