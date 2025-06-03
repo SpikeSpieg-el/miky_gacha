@@ -106,22 +106,7 @@ function showHome() {
   // Функция для переключения бокового меню
   function toggleMenu() {
     const menu = document.getElementById('sideMenu');
-    const isActive = menu.classList.contains('active');
-    
-    if (!isActive) { // Menu is about to open
-      menu.classList.add('active');
-      const navLinks = menu.querySelectorAll('.nav-link');
-      navLinks.forEach((link, index) => {
-        link.style.animationDelay = `${index * 0.07}s`; // Stagger delay
-      });
-    } else { // Menu is about to close
-      menu.classList.remove('active');
-      // Optional: Remove animation delays if they cause issues, though CSS animation should reset
-      const navLinks = menu.querySelectorAll('.nav-link');
-      navLinks.forEach(link => {
-        link.style.animationDelay = ''; // Reset delay
-      });
-    }
+    menu.classList.toggle('active');
   }
   
   // Функция для выделения активного раздела
@@ -308,10 +293,12 @@ function showHome() {
       if (i < currentTeam.length) {
         // Слот занят
         const member = currentTeam[i];
+        const currentStamina = member.stamina !== undefined ? member.stamina : (member.maxStamina || 100);
+        const currentMaxStamina = member.maxStamina || 100;
         teamSlot.innerHTML = `
           <img src="${member.imgUrl || member.img}" alt="${member.name}" class="img-fluid">
           <div class="position-absolute bottom-0 start-0 end-0 p-1 bg-dark bg-opacity-75 text-center">
-            <small>${member.rarity}★</small>
+            <small>${member.rarity}★ <span class="text-warning">${currentStamina}/${currentMaxStamina} STM</span></small>
           </div>
         `;
         teamSlot.setAttribute('data-index', i);
@@ -422,7 +409,8 @@ function showHome() {
             Power: ${card.power}<br>
             Beauty: ${card.beauty}<br>
             Charisma: ${card.charisma}<br>
-            Vocal: ${card.vocal}
+            Vocal: ${card.vocal}<br>
+            Stamina: ${card.stamina !== undefined ? card.stamina : (card.maxStamina || 100)}/${card.maxStamina || 100} STM
           `;
           
           // Добавляем бейдж с редкостью
@@ -525,12 +513,13 @@ function showHome() {
               <div class="tooltip-card">
                 ${member.name} (${member.rarity}★)<br>
                 P: ${member.power} | B: ${member.beauty}<br>
-                C: ${member.charisma} | V: ${member.vocal}
+                C: ${member.charisma} | V: ${member.vocal}<br>
+                STM: ${member.stamina !== undefined ? member.stamina : (member.maxStamina || 100)}/${member.maxStamina || 100}
               </div>
             </div>
             <div>
               <p class="mb-0">${member.name}</p>
-              <small class="text-muted">Rarity: ${member.rarity}★</small>
+              <small class="text-muted">Rarity: ${member.rarity}★ (${member.stamina !== undefined ? member.stamina : (member.maxStamina || 100)}/${member.maxStamina || 100} STM)</small>
               <div class="mt-1">
                 <button class="btn btn-sm btn-danger remove-member" data-index="${i}">Remove</button>
               </div>
@@ -648,7 +637,9 @@ function showHome() {
       beauty: card.beauty,
       charisma: card.charisma,
       vocal: card.vocal,
-      type: card.type
+      type: card.type,
+      stamina: card.stamina !== undefined ? card.stamina : (card.maxStamina || 100),
+      maxStamina: card.maxStamina || 100
     };
     
     if (slotIndex < currentTeam.length) {
@@ -708,9 +699,25 @@ function showHome() {
   // Функция для создания песни
   function produceSong() {
     // Получаем выбранный тип песни и его стоимость
+    const staminaCostSong = 20; 
+    if (currentTeam.length === 0 && staminaCostSong > 0) { 
+      // alert("You need a team to produce a song!"); // Alert if team is strictly required for songs with cost
+      // return; 
+    }
+    let canProduce = true;
+    for (const member of currentTeam) {
+      if (!member || member.stamina === undefined) {
+        console.error(`Error: ${member ? member.name : 'A team member'} has undefined stamina.`);
+        canProduce = false; break;
+      }
+      if (member.stamina < staminaCostSong) {
+        alert(`${member.name} is too tired to produce a new song. Needs ${staminaCostSong} STM, has ${member.stamina}.`);
+        canProduce = false; break;
+      }
+    }
+    if (!canProduce && currentTeam.length > 0) return;
+
     const songTypeSelect = document.getElementById('songType');
-    const songType = songTypeSelect.value;
-    let cost = 0;
     let baseQuality = 0;
     
     switch (songType) {
@@ -779,9 +786,18 @@ function showHome() {
     
     // Добавляем песню в список
     songs.push(song);
+
+    // Deduct stamina from team members
+    currentTeam.forEach(member => {
+      member.stamina -= staminaCostSong;
+    });
     
     // Обновляем отображение песен
     updateSongList();
+    updateTeamDisplay(); 
+    if (document.getElementById('teamModal') && document.getElementById('teamModal').classList.contains('show')) {
+        updateTeamModalContent();
+    }
     
     // Добавляем опыт студии
     addStudioExp(50 * songQuality);
@@ -1312,7 +1328,9 @@ function showHome() {
             beauty: beauty,
             charisma: charisma,
             vocal: vocal,
-            description: "A unique Miku character."
+            description: "A unique Miku character.",
+            maxStamina: 100, // Added
+            stamina: 100     // Added
         };
 
         // 3. Всегда добавляем карту в общую коллекцию (collection)
@@ -1605,10 +1623,25 @@ function showHome() {
   // Функция для проведения концерта
   function startConcert() {
     // Получаем выбранную площадку
+    const staminaCostConcert = 30;
+    if (currentTeam.length === 0 && staminaCostConcert > 0) { 
+      // alert("You need a team to start a concert!");  // Alert if team is strictly required
+      // return;
+    }
+    let canPerform = true;
+    for (const member of currentTeam) {
+      if (!member || member.stamina === undefined) {
+        console.error(`Error: ${member ? member.name : 'A team member'} has undefined stamina.`);
+        canPerform = false; break;
+      }
+      if (member.stamina < staminaCostConcert) {
+        alert(`${member.name} is too tired for a concert. Needs ${staminaCostConcert} STM, has ${member.stamina}.`);
+        canPerform = false; break;
+      }
+    }
+    if (!canPerform && currentTeam.length > 0) return;
+
     const venueSelect = document.getElementById('concertVenue');
-    const venue = venueSelect.value;
-    
-    // Затраты и лимиты для разных площадок
     const venueCosts = {
       'small': 50,
       'medium': 200,
@@ -1775,7 +1808,18 @@ function showHome() {
     concertResultModalInstance.show();
     
     // Добавляем запись в лог
-    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGems} gems`);
+    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGemsConcert} gems`);
+    
+    // Deduct stamina from team members
+    currentTeam.forEach(member => {
+      member.stamina -= staminaCostConcert;
+    });
+
+    // recoverStaminaBenched(); // Will be added in next step
+    updateTeamDisplay(); 
+    if (document.getElementById('teamModal') && document.getElementById('teamModal').classList.contains('show')) {
+        updateTeamModalContent();
+    }
   }
 
   // Функция для "поделиться" результатами концерта
@@ -1891,9 +1935,6 @@ function showHome() {
         particle.style.transform = `translate(${moveX}px, ${moveY}px)`;
       });
     });
-
-    // Initialize Starry Parallax Background
-    initStarryParallax();
   });
 
   // --- Starry Parallax Background ---
