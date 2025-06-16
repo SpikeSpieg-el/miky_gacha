@@ -1420,18 +1420,18 @@
 
   /* Star animation keyframes */
   @keyframes animateStars {
-    from { background-position: 0 0; }
-    to { background-position: 0 -10000px; } /* Large value for continuous scroll */
+    from { transform: translateY(0); }
+    to { transform: translateY(-100%); }
   }
 
   @keyframes animateStars2 {
-    from { background-position: 0 0; }
-    to { background-position: 0 -10000px; }
+    from { transform: translateY(0); }
+    to { transform: translateY(-100%); }
   }
 
   @keyframes animateStars3 {
-    from { background-position: 0 0; }
-    to { background-position: 0 -10000px; }
+    from { transform: translateY(0); }
+    to { transform: translateY(-100%); }
   }
 
   /* Star layers styling */
@@ -1442,35 +1442,33 @@
     right: 0;
     bottom: 0;
     width: 100%;
-    height: 100%;
+    height: 200%; /* Увеличиваем высоту для плавной анимации */
     display: block;
     background-repeat: repeat;
   }
 
   #stars {
-    background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Furthest */
-    background-size: 500px auto; /* Adjust size as needed */
-    animation: animateStars 240s linear infinite; /* Slowest */
-    z-index: 1; /* Inside .parallax-bg, above its background but behind stars2 */
+    background-image: url('stardust.png');
+    background-size: 500px auto;
+    animation: animateStars 240s linear infinite;
+    z-index: 1;
     opacity: 0.7;
   }
 
   #stars2 {
-    background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Placeholder - medium */
-    /* background-image: url('star_medium.png'); */ /* Ideal: different star pattern */
-    background-size: 1000px auto; /* Adjust size as needed */
-    animation: animateStars2 160s linear infinite; /* Medium speed */
+    background-image: url('stardust.png');
+    background-size: 1000px auto;
+    animation: animateStars2 160s linear infinite;
     z-index: 2;
-    opacity: 0.5; /* Make it a bit more subtle if using same image */
+    opacity: 0.5;
   }
 
   #stars3 {
-    background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Placeholder - closest */
-    /* background-image: url('star_fast.png'); */ /* Ideal: different, larger star pattern */
-    background-size: 1500px auto; /* Adjust size as needed */
-    animation: animateStars3 80s linear infinite; /* Fastest */
+    background-image: url('stardust.png');
+    background-size: 1500px auto;
+    animation: animateStars3 80s linear infinite;
     z-index: 3;
-    opacity: 0.3; /* Make it even more subtle if using same image */
+    opacity: 0.3;
   }
 
   /* Стили для нового хедера */
