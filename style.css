@@ -1609,3 +1609,133 @@
     text-align: center;
    }
 }
+
+/* Добавляем стили для тостов */
+.custom-toast {
+  background-color: rgba(33, 37, 41, 0.9);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  min-width: 250px;
+  max-width: 350px;
+  border-left: 4px solid var(--accent-color);
+  animation: slide-in 0.3s ease-out;
+}
+
+.toast-success {
+  border-left-color: #28a745;
+}
+
+.toast-error {
+  border-left-color: #dc3545;
+}
+
+.toast-warning {
+  border-left-color: #ffc107;
+}
+
+.toast-info {
+  border-left-color: var(--accent-color);
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Улучшенные стили для управления командой */
+.team-slot {
+  transition: all 0.2s ease-out;
+  border: 2px solid transparent;
+}
+
+.team-slot.highlight {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+}
+
+.team-slot.selected-slot {
+  transform: scale(1.05);
+}
+
+.card-option {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  margin: 5px;
+}
+
+.card-option:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.card-option.selected {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+  transform: translateY(-5px) scale(1.05);
+}
+
+/* Стиль для подсказки над картой */
+.card-feedback {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(33, 37, 41, 0.9);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  animation: fade-in-up 0.3s ease-out;
+}
+
+@keyframes fade-in-up {
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* Стили для инструкций в модальном окне */
+.team-instructions {
+  background-color: rgba(33, 37, 41, 0.8);
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  border-left: 4px solid var(--accent-color);
+}
+
+/* Улучшенный вид карт в менеджере команды */
+#cardSelection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgba(33, 37, 41, 0.5);
+}

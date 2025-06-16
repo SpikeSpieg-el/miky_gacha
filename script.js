@@ -1,8 +1,65 @@
-// Функция для отображения обратной связи при добавлении карточки
+// Функция для отображения тостов (всплывающих уведомлений)
+function showToast(message, type = 'info', duration = 3000) {
+  // Создаем уникальный ID для тоста
+  const toastId = 'toast-' + Date.now();
+  
+  // Определяем класс для типа уведомления
+  const typeClass = `toast-${type}`;
+  
+  // Создаем элемент тоста
+  const toastElement = document.createElement('div');
+  toastElement.className = `toast custom-toast ${typeClass} show`;
+  toastElement.setAttribute('role', 'alert');
+  toastElement.setAttribute('aria-live', 'assertive');
+  toastElement.setAttribute('aria-atomic', 'true');
+  toastElement.id = toastId;
+  
+  // Добавляем иконку в зависимости от типа
+  let iconClass = 'info-circle';
+  if (type === 'success') iconClass = 'check-circle';
+  if (type === 'error') iconClass = 'exclamation-circle';
+  if (type === 'warning') iconClass = 'exclamation-triangle';
+  
+  // Формируем содержимое тоста
+  toastElement.innerHTML = `
+    <div class="toast-header bg-transparent border-0 text-white">
+      <i class="fas fa-${iconClass} me-2"></i>
+      <strong class="me-auto">Уведомление</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      ${message}
+    </div>
+  `;
+  
+  // Добавляем тост в контейнер
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.appendChild(toastElement);
+    
+    // Создаем экземпляр Toast из Bootstrap
+    const toast = new bootstrap.Toast(toastElement, {
+      autohide: true,
+      delay: duration
+    });
+    
+    // Показываем тост
+    toast.show();
+    
+    // Удаляем тост из DOM после скрытия
+    toastElement.addEventListener('hidden.bs.toast', function() {
+      toastElement.remove();
+    });
+  } else {
+    console.error('Toast container not found!');
+  }
+}
+
+// Обновленная функция для отображения обратной связи при добавлении карточки
 function showFeedback(message) {
   // Создаем элемент для отображения сообщения
   const feedback = document.createElement('div');
-  feedback.className = 'card-added-feedback';
+  feedback.className = 'card-feedback';
   feedback.textContent = message;
   
   // Добавляем на страницу
@@ -10,9 +67,18 @@ function showFeedback(message) {
   
   // Удаляем через некоторое время
   setTimeout(() => {
-    feedback.remove();
-  }, 3000); // 3 секунды показа
+    feedback.style.animation = 'fade-out 0.3s ease-out';
+    feedback.addEventListener('animationend', () => {
+      feedback.remove();
+    });
+  }, 2000); // 2 секунды показа
 }
+
+// Глобальные переменные для работы с коллекцией карточек
+let collection = [];
+let uniqueCards = {};
+let lastPulledCardsData = [];
+let gachaPullModalInstance = null;
 
 // Функции переключения между разделами
 function showHome() {
@@ -236,7 +302,7 @@ function showHome() {
       }
       
       // Показываем сообщение о повышении уровня
-      alert(`Studio Level Up! You are now level ${studioLevel}!`);
+      showToast(`Studio Level Up! You are now level ${studioLevel}!`, 'success');
       
       // Добавляем запись в лог
       updateActivityLog(`Studio Level Up!`, `Your studio is now level ${studioLevel}`);
@@ -276,7 +342,7 @@ function showHome() {
       // Добавляем запись в лог
       updateActivityLog(`Studio Upgraded`, `Your studio is now level ${studioLevel}`);
     } else {
-      alert(`Not enough gems! You need ${upgradeCost}💎, but you have ${totalGems}💎`);
+      showToast(`Недостаточно гемов! Нужно ${upgradeCost}💎, у вас ${totalGems}💎`, 'error');
     }
   }
 
@@ -290,15 +356,20 @@ function showHome() {
       const teamSlot = document.createElement('div');
       teamSlot.className = 'card-thumbnail position-relative';
       
-      if (i < currentTeam.length) {
+      if (i < currentTeam.length && currentTeam[i]) {
         // Слот занят
         const member = currentTeam[i];
+        if (!member) {
+          console.error(`Ошибка: объект члена команды ${i} не определен`);
+          continue; // Пропускаем этот слот
+        }
+        
         const currentStamina = member.stamina !== undefined ? member.stamina : (member.maxStamina || 100);
         const currentMaxStamina = member.maxStamina || 100;
         teamSlot.innerHTML = `
-          <img src="${member.imgUrl || member.img}" alt="${member.name}" class="img-fluid">
+          <img src="${member.imgUrl || member.img}" alt="${member.name || 'Персонаж'}" class="img-fluid">
           <div class="position-absolute bottom-0 start-0 end-0 p-1 bg-dark bg-opacity-75 text-center">
-            <small>${member.rarity}★ <span class="text-warning">${currentStamina}/${currentMaxStamina} STM</span></small>
+            <small>${member.rarity || '?'}★ <span class="text-warning">${currentStamina}/${currentMaxStamina} STM</span></small>
           </div>
         `;
         teamSlot.setAttribute('data-index', i);
@@ -347,15 +418,23 @@ function showHome() {
   // Функция для обновления списка карточек
   function updateCardSelectionList() {
     const cardSelection = document.getElementById('cardSelection');
+    if (!cardSelection) {
+      console.error('Элемент cardSelection не найден!');
+      return;
+    }
+    
+    // Сохраняем позицию прокрутки перед обновлением
+    const scrollPosition = cardSelection.scrollTop;
+    
     cardSelection.innerHTML = '';
     
     // Получаем список карточек из коллекции
     let availableCards = [...collection].filter(card => 
-        !currentTeam.some(member => 
-            (member.id && member.id === card.id) || 
-            (member.img && member.img === card.img) || 
-            (member.imgUrl && member.imgUrl === (card.imgUrl || card.img))
-        )
+      !currentTeam.some(member => 
+        (member.id && member.id === card.id) || 
+        (member.img && member.img === card.img) || 
+        (member.imgUrl && member.imgUrl === (card.imgUrl || card.img))
+      )
     );
     
     // Сортировка карточек
@@ -363,22 +442,66 @@ function showHome() {
     const sortType = cardFilterElement ? cardFilterElement.value : 'all';
     
     if (sortType !== 'all') {
-        availableCards.sort((a, b) => {
-            if (sortType === 'rarity') { return b.rarity - a.rarity; }
-            else if (sortType === 'power') { return b.power - a.power; }
-            else if (sortType === 'beauty') { return b.beauty - a.beauty; }
-            else if (sortType === 'charisma') { return b.charisma - a.charisma; }
-            else if (sortType === 'vocal') { return b.vocal - a.vocal; }
-            return 0;
-        });
+      availableCards.sort((a, b) => {
+        if (sortType === 'rarity') { return b.rarity - a.rarity; }
+        else if (sortType === 'power') { return b.power - a.power; }
+        else if (sortType === 'beauty') { return b.beauty - a.beauty; }
+        else if (sortType === 'charisma') { return b.charisma - a.charisma; }
+        else if (sortType === 'vocal') { return b.vocal - a.vocal; }
+        return 0;
+      });
     }
     
     if (availableCards.length === 0) {
       const placeholder = document.createElement('div');
-      placeholder.className = 'card-placeholder';
-      placeholder.textContent = 'No available cards';
+      placeholder.className = 'card-placeholder text-center p-3';
+      placeholder.innerHTML = `
+        <i class="fas fa-info-circle mb-2" style="font-size: 24px;"></i>
+        <p>Нет доступных карточек</p>
+        <small class="text-muted">Соберите больше карточек через гача!</small>
+      `;
       cardSelection.appendChild(placeholder);
     } else {
+      // Добавляем поиск, если карточек много
+      if (availableCards.length > 10) {
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'search-container mb-3';
+        searchContainer.innerHTML = `
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-dark text-light border-secondary">
+              <i class="fas fa-search"></i>
+            </span>
+            <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" 
+                   placeholder="Поиск карточек..." id="cardSearchInput">
+          </div>
+        `;
+        cardSelection.appendChild(searchContainer);
+        
+        // Добавляем обработчик поиска
+        setTimeout(() => {
+          const searchInput = document.getElementById('cardSearchInput');
+          if (searchInput) {
+            searchInput.addEventListener('input', function() {
+              const searchValue = this.value.toLowerCase();
+              document.querySelectorAll('.card-option-container').forEach(container => {
+                const cardName = container.getAttribute('data-name').toLowerCase();
+                const cardRarity = container.getAttribute('data-rarity');
+                if (cardName.includes(searchValue) || cardRarity.includes(searchValue)) {
+                  container.style.display = '';
+                } else {
+                  container.style.display = 'none';
+                }
+              });
+            });
+          }
+        }, 100);
+      }
+      
+      // Создаем контейнер для карточек
+      const cardsGrid = document.createElement('div');
+      cardsGrid.className = 'cards-grid';
+      cardSelection.appendChild(cardsGrid);
+      
       availableCards.forEach((card, index) => {
         // Проверяем, не находится ли карточка уже в команде
         const isInTeam = currentTeam.some(member => 
@@ -389,10 +512,12 @@ function showHome() {
         
         if (!isInTeam) {
           const cardContainer = document.createElement('div');
-          cardContainer.className = 'position-relative';
+          cardContainer.className = 'position-relative card-option-container';
+          cardContainer.setAttribute('data-name', card.name);
+          cardContainer.setAttribute('data-rarity', card.rarity);
           
           const cardElement = document.createElement('img');
-          cardElement.className = 'card-option img-fluid team-manager-img'; // Добавляем класс team-manager-img
+          cardElement.className = 'card-option img-fluid team-manager-img'; 
           cardElement.src = card.imgUrl || card.img;
           cardElement.alt = card.name;
           
@@ -446,26 +571,23 @@ function showHome() {
             highlightAvailableSlots();
           });
           
-          cardSelection.appendChild(cardContainer);
+          cardsGrid.appendChild(cardContainer);
         }
       });
     }
+    
+    // Восстанавливаем позицию прокрутки
+    setTimeout(() => {
+      cardSelection.scrollTop = scrollPosition;
+    }, 10);
   }
 
-  // Новая функция для подсветки ВСЕХ слотов команды
+  // Функция для подсветки доступных слотов команды
   function highlightAvailableSlots() {
     const teamSlots = document.querySelectorAll('.team-slot');
     teamSlots.forEach((slot, index) => {
       if (index < maxTeamSize) { // Подсвечиваем только существующие слоты
-          slot.classList.add('highlight');
-          // Можно добавить таймер для снятия подсветки, если нужно
-          /*
-          setTimeout(() => {
-              if (selectedSlotIndex !== index) { // Не убирать подсветку, если слот выбран
-                  slot.classList.remove('highlight');
-              }
-          }, 3000); 
-          */
+        slot.classList.add('highlight');
       }
     });
   }
@@ -481,45 +603,43 @@ function showHome() {
       teamSlot.className = 'team-slot mb-3 p-2 bg-dark rounded';
       teamSlot.setAttribute('data-slot', i);
       
-      // ----- ИЗМЕНЕНИЕ ЛОГИКИ КЛИКА ПО СЛОТУ ----- 
       const handleSlotClick = function(slotIndex) {
-          if (!selectedCardData) { // Проверяем наличие объекта карты
-              showFeedback('Сначала выберите карточку из вашей коллекции справа.');
-              return; 
-          }
-          
-          // Данные карты уже есть в selectedCardData
-          // Убираем повторное получение availableCards и поиск по индексу
-          /*
-          let availableCards = [...];
-          const sortType = ...;
-          if (sortType !== 'all') { ... }
-          const selected_card_data = availableCards[selectedCardIndex];
-          if (!selected_card_data) { ... }
-          */
-
-          // Добавляем карту в команду
-          addCardToTeam(selectedCardData, slotIndex); // Передаем объект карты
+        if (!selectedCardData) { // Проверяем наличие объекта карты
+          showFeedback('Сначала выберите карточку из вашей коллекции справа.');
+          return; 
+        }
+        
+        // Добавляем карту в команду
+        addCardToTeam(selectedCardData, slotIndex); // Передаем объект карты
       };
-      // ----- КОНЕЦ ИЗМЕНЕНИЯ ЛОГИКИ КЛИКА ПО СЛОТУ -----
 
-      if (i < currentTeam.length) {
+      if (i < currentTeam.length && currentTeam[i]) {
         // Слот занят
         const member = currentTeam[i];
+        if (!member) {
+          console.error(`Ошибка: объект члена команды ${i} не определен`);
+          continue; // Пропускаем этот слот
+        }
+        
+        const memberName = member.name || 'Персонаж';
+        const memberRarity = member.rarity || '?';
+        const memberStamina = member.stamina !== undefined ? member.stamina : (member.maxStamina || 100);
+        const memberMaxStamina = member.maxStamina || 100;
+        
         teamSlot.innerHTML = `
           <div class="d-flex">
             <div class="card-thumbnail me-3 position-relative">
-              <img src="${member.imgUrl || member.img}" alt="${member.name}" class="img-fluid team-manager-img"> 
+              <img src="${member.imgUrl || member.img}" alt="${memberName}" class="img-fluid team-manager-img"> 
               <div class="tooltip-card">
-                ${member.name} (${member.rarity}★)<br>
+                ${memberName} (${memberRarity}★)<br>
                 P: ${member.power} | B: ${member.beauty}<br>
                 C: ${member.charisma} | V: ${member.vocal}<br>
-                STM: ${member.stamina !== undefined ? member.stamina : (member.maxStamina || 100)}/${member.maxStamina || 100}
+                STM: ${memberStamina}/${memberMaxStamina}
               </div>
             </div>
             <div>
-              <p class="mb-0">${member.name}</p>
-              <small class="text-muted">Rarity: ${member.rarity}★ (${member.stamina !== undefined ? member.stamina : (member.maxStamina || 100)}/${member.maxStamina || 100} STM)</small>
+              <p class="mb-0">${memberName}</p>
+              <small class="text-muted">Rarity: ${memberRarity}★ (${memberStamina}/${memberMaxStamina} STM)</small>
               <div class="mt-1">
                 <button class="btn btn-sm btn-danger remove-member" data-index="${i}">Remove</button>
               </div>
@@ -529,12 +649,7 @@ function showHome() {
 
         teamSlot.querySelector('.remove-member').addEventListener('click', (event) => {
           event.stopPropagation(); // Предотвращаем всплытие на родительский div
-          if (confirm(`Remove ${member.name} from your team?`)) {
-            currentTeam.splice(i, 1);
-            selectedCardData = null; // Сбрасываем выбор карты
-            selectedSlotIndex = -1; 
-            updateTeamModalContent();
-          }
+          removeTeamMember(i);
         });
         
         // Обработчик для занятого слота
@@ -572,58 +687,10 @@ function showHome() {
     document.getElementById('modalPerfBonus').textContent = `+${teamBonuses.performance}%`;
   }
 
-  // Функция для выбора слота команды
-  function selectTeamSlot(slotIndex) {
-    // Снимаем выделение со всех слотов
-    document.querySelectorAll('.team-slot').forEach(slot => {
-      slot.classList.remove('highlight', 'selected-slot');
-    });
-    
-    // Выделяем выбранный слот
-    const slot = document.querySelector(`.team-slot[data-slot="${slotIndex}"]`);
-    slot.classList.add('highlight', 'selected-slot');
-    selectedSlotIndex = slotIndex;
-    
-    // Если карточка уже выбрана, сразу добавляем ее в команду
-    if (selectedCardData !== null) {
-      const availableCards = [...collection].filter(card => 
-        !currentTeam.some(member => 
-          (member.id && member.id === card.id) || 
-          (member.img && member.img === card.img) || 
-          (member.imgUrl && member.imgUrl === (card.imgUrl || card.img))
-        )
-      );
-      
-      // Сортировка карточек
-      const sortType = document.getElementById('cardFilter').value;
-      if (sortType !== 'all') {
-        availableCards.sort((a, b) => {
-          if (sortType === 'rarity') {
-            return b.rarity - a.rarity;
-          } else if (sortType === 'power') {
-            return b.power - a.power;
-          } else if (sortType === 'beauty') {
-            return b.beauty - a.beauty;
-          } else if (sortType === 'charisma') {
-            return b.charisma - a.charisma;
-          } else if (sortType === 'vocal') {
-            return b.vocal - a.vocal;
-          }
-          return 0;
-        });
-      }
-      
-      addCardToTeam(availableCards[selectedCardData.id], slotIndex);
-    } else {
-      // Показываем подсказку о необходимости выбрать карточку
-      showFeedback('Теперь выберите карточку для этого слота');
-    }
-  }
-
   // Функция для добавления карточки в команду
   function addCardToTeam(card, slotIndex) {
     if (!card) { // Проверка на null/undefined
-      showFeedback('Ошибка: не переданы данные карты для добавления.');
+      showToast('Ошибка: не переданы данные карты для добавления.', 'error');
       return;
     }
 
@@ -648,7 +715,7 @@ function showHome() {
       currentTeam.push(teamMember);
     }
     
-    showFeedback(`${card.name} добавлен(а) в команду!`);
+    showToast(`${card.name} добавлен(а) в команду!`, 'success');
     
     selectedCardData = null; // Сбрасываем объект карты
     selectedSlotIndex = -1;
@@ -658,7 +725,20 @@ function showHome() {
 
   // Функция для удаления члена команды
   function removeTeamMember(index) {
-    if (confirm(`Remove ${currentTeam[index].name} from your team?`)) {
+    const removeMemberDialog = document.createElement('div');
+    removeMemberDialog.className = 'card-feedback';
+    removeMemberDialog.innerHTML = `
+      <div class="d-flex align-items-center">
+        <span>Удалить ${currentTeam[index].name} из команды?</span>
+        <button class="btn btn-sm btn-danger ms-2 confirm-remove">Удалить</button>
+        <button class="btn btn-sm btn-secondary ms-2 cancel-remove">Отмена</button>
+      </div>
+    `;
+    
+    document.body.appendChild(removeMemberDialog);
+    
+    // Добавляем обработчики событий
+    removeMemberDialog.querySelector('.confirm-remove').addEventListener('click', () => {
       // Удаляем члена команды
       currentTeam.splice(index, 1);
       
@@ -668,9 +748,34 @@ function showHome() {
       // Обновляем отображение команды
       updateTeamDisplay();
       
-      // Добавляем запись в лог
+      // Добавляем запись в лог и показываем уведомление
       updateActivityLog('Team Member Removed', 'A member has been removed from your team');
-    }
+      showToast('Персонаж удален из команды', 'info');
+      
+      // Удаляем диалог
+      removeMemberDialog.style.animation = 'fade-out 0.3s ease-out';
+      removeMemberDialog.addEventListener('animationend', () => {
+        removeMemberDialog.remove();
+      });
+    });
+    
+    removeMemberDialog.querySelector('.cancel-remove').addEventListener('click', () => {
+      // Удаляем диалог
+      removeMemberDialog.style.animation = 'fade-out 0.3s ease-out';
+      removeMemberDialog.addEventListener('animationend', () => {
+        removeMemberDialog.remove();
+      });
+    });
+    
+    // Автоматически удаляем через 5 секунд, если пользователь не отреагировал
+    setTimeout(() => {
+      if (document.body.contains(removeMemberDialog)) {
+        removeMemberDialog.style.animation = 'fade-out 0.3s ease-out';
+        removeMemberDialog.addEventListener('animationend', () => {
+          removeMemberDialog.remove();
+        });
+      }
+    }, 5000);
   }
 
   // Функция для расчета бонусов команды
@@ -682,14 +787,27 @@ function showHome() {
     
     // Считаем бонусы от каждого члена команды
     currentTeam.forEach(member => {
+      // Проверяем, что объект члена команды определен
+      if (!member) {
+        console.error('Ошибка: объект члена команды не определен');
+        return; // Пропускаем этот элемент
+      }
+      
+      // Убедимся, что у члена команды есть все необходимые свойства
+      const charisma = member.charisma || 0;
+      const vocal = member.vocal || 0;
+      const power = member.power || 0;
+      const beauty = member.beauty || 0;
+      const rarity = member.rarity || 1;
+      
       // Бонус фанатов зависит от харизмы
-      teamBonuses.fanGain += Math.floor(member.charisma / 10) + member.rarity * 2;
+      teamBonuses.fanGain += Math.floor(charisma / 10) + rarity * 2;
       
       // Бонус качества песни зависит от вокала
-      teamBonuses.songQuality += Math.floor(member.vocal / 10) + member.rarity * 2;
+      teamBonuses.songQuality += Math.floor(vocal / 10) + rarity * 2;
       
       // Бонус выступления зависит от силы и красоты
-      teamBonuses.performance += Math.floor((member.power + member.beauty) / 20) + member.rarity * 2;
+      teamBonuses.performance += Math.floor((power + beauty) / 20) + rarity * 2;
     });
     
     // Обновляем отображение бонусов
@@ -698,21 +816,32 @@ function showHome() {
 
   // Функция для создания песни
   function produceSong() {
+    const songType = document.getElementById('songType').value;
+    let cost;
     // Получаем выбранный тип песни и его стоимость
     const staminaCostSong = 20; 
     if (currentTeam.length === 0 && staminaCostSong > 0) { 
-      // alert("You need a team to produce a song!"); // Alert if team is strictly required for songs with cost
+      // showToast("Для создания песни нужна команда!", 'warning'); // Alert if team is strictly required for songs with cost
       // return; 
     }
     let canProduce = true;
     for (const member of currentTeam) {
-      if (!member || member.stamina === undefined) {
-        console.error(`Error: ${member ? member.name : 'A team member'} has undefined stamina.`);
-        canProduce = false; break;
+      if (!member) {
+        console.error('Ошибка: undefined член команды в currentTeam');
+        canProduce = false; 
+        break;
       }
+      
+      if (member.stamina === undefined) {
+        console.error(`Ошибка: ${member.name || 'Персонаж'} имеет undefined stamina.`);
+        canProduce = false; 
+        break;
+      }
+      
       if (member.stamina < staminaCostSong) {
-        alert(`${member.name} is too tired to produce a new song. Needs ${staminaCostSong} STM, has ${member.stamina}.`);
-        canProduce = false; break;
+        showToast(`${member.name || 'Персонаж'} слишком устал(а) для создания песни. Нужно ${staminaCostSong} энергии, есть ${member.stamina}.`, 'warning');
+        canProduce = false; 
+        break;
       }
     }
     if (!canProduce && currentTeam.length > 0) return;
@@ -741,7 +870,7 @@ function showHome() {
     
     // Проверяем, хватает ли гемов
     if (totalGems < cost) {
-      alert(`Not enough gems! You need ${cost}💎, but you have ${totalGems}💎`);
+      showToast(`Недостаточно гемов! Нужно ${cost}💎, у вас ${totalGems}💎`, 'error');
       return;
     }
     
@@ -877,19 +1006,19 @@ function showHome() {
     `;
     
     // Добавляем новую запись в начало лога
-    activityLog.insertBefore(activityItem, activityLog.firstChild);
-    
-    // Ограничиваем количество записей в логе
-    if (activityLog.children.length > 10) {
-      activityLog.removeChild(activityLog.lastChild);
+    if (activityLog) {
+      activityLog.insertBefore(activityItem, activityLog.firstChild);
+      
+      // Ограничиваем количество записей в логе
+      if (activityLog.children.length > 10) {
+        activityLog.removeChild(activityLog.lastChild);
+      }
     }
   }
 
   const characters = [
     
   ];
-
-  let collection = [];
 
   // Массив с именами для карточек
   const mikuNames = [
@@ -1101,7 +1230,8 @@ function showHome() {
   let uniqueCardsCollected = 0; // Количество собранных уникальных карт
 
   // Массив для хранения информации о собранных уникальных картах
-  let uniqueCards = {};
+  // Удаляем повторное объявление
+  // let uniqueCards = {};
 
   // Функция для обновления счетчика коллекции
   function updateCollectionCounter() {
@@ -1131,8 +1261,9 @@ function showHome() {
   }
 
   // Глобальная переменная для хранения данных последнего пулла
-  let lastPulledCardsData = [];
-  let gachaPullModalInstance = null;
+  // Удаляем повторное объявление
+  // let lastPulledCardsData = [];
+  // let gachaPullModalInstance = null;
 
   // Модифицированная функция для отображения карточек
   function displayPulledCards(cardsData, containerId) {
@@ -1247,7 +1378,7 @@ function showHome() {
   async function pullGacha(times) {
     const cost = times * 10;
     if (totalGems < cost) {
-      alert(`Not enough gems! You need ${cost}💎, but you have ${totalGems}💎`);
+      showToast(`Недостаточно гемов! Нужно ${cost}💎, у вас ${totalGems}💎`, 'error');
       return;
     }
 
@@ -1262,7 +1393,7 @@ function showHome() {
 
     if (!modalElement || !modalMessage || !collectButton || !spinner || !modalResultsContainer) {
         console.error("Ошибка: Не найден один или несколько элементов модального окна гачи!");
-        alert("Произошла ошибка интерфейса гачи. Пожалуйста, перезагрузите страницу.");
+        showToast("Произошла ошибка интерфейса гачи. Пожалуйста, перезагрузите страницу.", "error");
         return;
     }
 
@@ -1529,33 +1660,6 @@ function showHome() {
     }
   }
   
-  // Добавляем обработчики событий для клонированных элементов коллекции
-  // Удаляем этот обработчик DOMContentLoaded, так как он теперь в общем обработчике
-  // document.addEventListener('DOMContentLoaded', function() {
-  //   // Инициализируем некоторые карточки для демонстрации на главной странице
-  //   if (collection.length === 0) {
-  //     characters.forEach(char => {
-  //       collection.push({...char, 
-  //         power: Math.floor(Math.random() * 80) + 20,
-  //         beauty: Math.floor(Math.random() * 80) + 20,
-  //         charisma: Math.floor(Math.random() * 80) + 20,
-  //         vocal: Math.floor(Math.random() * 80) + 20,
-  //         description: "A starter Miku character."
-  //       });
-  //       
-  //       // Добавляем в список уникальных карт
-  //       if (!uniqueCards[char.img]) {
-  //         uniqueCards[char.img] = char;
-  //       }
-  //     });
-  //     
-  //     // Обновляем счетчик коллекции
-  //     updateCollectionCounter();
-  //   }
-  //   
-  //   // Инициализируем статистику тайкун-режима
-  //   updateTycoonStats();
-  // });
 
   // Функция для сбора наград за ежедневные задания
   function collectDailyTasks() {
@@ -1598,13 +1702,13 @@ function showHome() {
       message = message.slice(0, -2);
       
       // Показываем сообщение и обновляем статистику
-      alert(`${message}. Total: ${totalReward}💎${gachaTickets > 0 ? ' + ' + gachaTickets + ' gacha ticket(s)' : ''}`);
+      showToast(`${message}. Total: ${totalReward}💎${gachaTickets > 0 ? ' + ' + gachaTickets + ' gacha ticket(s)' : ''}`, 'success');
       updateTycoonStats();
       
       // Добавляем запись в лог
       updateActivityLog('Daily Tasks Completed', `Received ${totalReward}💎${gachaTickets > 0 ? ' + ' + gachaTickets + ' ticket(s)' : ''}`);
     } else {
-      alert('No completed tasks to collect rewards from.');
+      showToast('Нет выполненных заданий для получения наград.', 'info');
     }
   }
 
@@ -1625,23 +1729,35 @@ function showHome() {
     // Получаем выбранную площадку
     const staminaCostConcert = 30;
     if (currentTeam.length === 0 && staminaCostConcert > 0) { 
-      // alert("You need a team to start a concert!");  // Alert if team is strictly required
-      // return;
+      showToast("Для концерта рекомендуется иметь команду!", 'warning');
+      // Не прерываем выполнение, даем возможность продолжить
     }
+    
     let canPerform = true;
     for (const member of currentTeam) {
       if (!member || member.stamina === undefined) {
-        console.error(`Error: ${member ? member.name : 'A team member'} has undefined stamina.`);
-        canPerform = false; break;
+        console.error(`Ошибка: ${member ? member.name || 'Персонаж' : 'Член команды'} имеет undefined stamina.`);
+        canPerform = false; 
+        break;
       }
+      
       if (member.stamina < staminaCostConcert) {
-        alert(`${member.name} is too tired for a concert. Needs ${staminaCostConcert} STM, has ${member.stamina}.`);
-        canPerform = false; break;
+        showToast(`${member.name || 'Персонаж'} слишком устал(а) для концерта. Нужно ${staminaCostConcert} энергии, есть ${member.stamina}.`, 'warning');
+        canPerform = false; 
+        break;
       }
     }
+    
     if (!canPerform && currentTeam.length > 0) return;
 
     const venueSelect = document.getElementById('concertVenue');
+    if (!venueSelect) {
+      showToast('Ошибка: не найден элемент выбора площадки', 'error');
+      return;
+    }
+    
+    const selectedVenue = venueSelect.value || 'small'; // Получаем значение выбранной площадки или используем 'small' по умолчанию
+    
     const venueCosts = {
       'small': 50,
       'medium': 200,
@@ -1667,8 +1783,8 @@ function showHome() {
     };
     
     // Проверяем, достаточно ли гемов
-    if (totalGems < venueCosts[venue]) {
-      alert(`Not enough gems! You need ${venueCosts[venue]}💎, but you have ${totalGems}💎`);
+    if (totalGems < venueCosts[selectedVenue]) {
+      showToast(`Недостаточно гемов! Нужно ${venueCosts[selectedVenue]}💎, у вас ${totalGems}💎`, 'error');
       return;
     }
     
@@ -1692,10 +1808,10 @@ function showHome() {
     const ticketPrice = parseInt(document.getElementById('ticketPrice').value);
     
     // Снимаем стоимость аренды площадки
-    totalGems -= venueCosts[venue];
+    totalGems -= venueCosts[selectedVenue];
     
     // Рассчитываем базовое количество привлеченных фанатов
-    let baseFans = Math.floor(Math.random() * (venueMaxFans[venue] / 2)) + Math.floor(venueMaxFans[venue] / 2);
+    let baseFans = Math.floor(Math.random() * (venueMaxFans[selectedVenue] / 2)) + Math.floor(venueMaxFans[selectedVenue] / 2);
     
     // Корректируем на основе цены билета
     // Чем выше цена, тем меньше фанатов, но больше доход
@@ -1711,7 +1827,7 @@ function showHome() {
     }
     
     // Проверяем на максимум для площадки
-    const actualFans = Math.min(baseFans, venueMaxFans[venue]);
+    const actualFans = Math.min(baseFans, venueMaxFans[selectedVenue]);
     
     // Рассчитываем заработанные гемы
     let earnedGems = Math.floor(actualFans * (ticketPrice / 10));
@@ -1753,7 +1869,7 @@ function showHome() {
     let performanceComment = '';
     
     // Качество выступления зависит от количества фанатов относительно максимума
-    const performanceQuality = actualFans / venueMaxFans[venue];
+    const performanceQuality = actualFans / venueMaxFans[selectedVenue];
     
     if (performanceQuality >= 0.9) {
       performanceRating = 'Outstanding!';
@@ -1778,7 +1894,7 @@ function showHome() {
     }
     
     // Заполняем данные в модальном окне результатов
-    document.getElementById('concertVenueName').textContent = venueNames[venue];
+    document.getElementById('concertVenueName').textContent = venueNames[selectedVenue];
     document.getElementById('concertSongName').textContent = `Song: ${selectedSong.name}`;
     document.getElementById('concertFans').textContent = `+${actualFans}`;
     document.getElementById('concertGems').textContent = `+${earnedGems}`;
@@ -1808,23 +1924,30 @@ function showHome() {
     concertResultModalInstance.show();
     
     // Добавляем запись в лог
-    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGemsConcert} gems`);
+    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGems} gems`);
     
-    // Deduct stamina from team members
+    // Деплитим выносливость у членов команды
     currentTeam.forEach(member => {
-      member.stamina -= staminaCostConcert;
+      if (member && member.stamina !== undefined) {
+        member.stamina -= staminaCostConcert;
+      }
     });
 
-    // recoverStaminaBenched(); // Will be added in next step
-    updateTeamDisplay(); 
+    // Обновляем отображение команды
+    updateTeamDisplay();
     if (document.getElementById('teamModal') && document.getElementById('teamModal').classList.contains('show')) {
-        updateTeamModalContent();
+      updateTeamModalContent();
     }
+    
+    // Добавляем запись в лог
+    updateActivityLog('Concert Performed', `Gained ${actualFans} fans and ${earnedGems} gems`);
+    
+    // Показываем модальное окно с результатами
   }
 
   // Функция для "поделиться" результатами концерта
   function shareConcertResult() {
-    alert('Concert results shared on social media!');
+    showToast('Результаты концерта опубликованы в социальных сетях!', 'success');
     
     // Бонус за шеринг
     totalFans += 10;
@@ -2279,6 +2402,110 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Вывод в консоль для отладки
   console.log("DOMContentLoaded: Инициализация завершена");
+  
+  // Добавляем обработчики для кнопок в гача-системе
+  const pullGacha1Button = document.getElementById('pullGacha1Button');
+  if (pullGacha1Button) {
+    pullGacha1Button.addEventListener('click', function() {
+      console.log('Нажата кнопка pullGacha1Button');
+      pullGacha(1);
+    });
+  } else {
+    console.warn('Кнопка pullGacha1Button не найдена!');
+  }
+  
+  const pullGacha10Button = document.getElementById('pullGacha10Button');
+  if (pullGacha10Button) {
+    pullGacha10Button.addEventListener('click', function() {
+      console.log('Нажата кнопка pullGacha10Button');
+      pullGacha(10);
+    });
+  } else {
+    console.warn('Кнопка pullGacha10Button не найдена!');
+  }
+  
+  const gachaGoToCollectionButton = document.getElementById('gachaGoToCollectionButton');
+  if (gachaGoToCollectionButton) {
+    gachaGoToCollectionButton.addEventListener('click', function() {
+      console.log('Нажата кнопка gachaGoToCollectionButton');
+      showCollection();
+    });
+  } else {
+    console.warn('Кнопка gachaGoToCollectionButton не найдена!');
+  }
+  
+  const collectionGoToGachaButton = document.getElementById('collectionGoToGachaButton');
+  if (collectionGoToGachaButton) {
+    collectionGoToGachaButton.addEventListener('click', function() {
+      console.log('Нажата кнопка collectionGoToGachaButton');
+      showGachaSystem();
+    });
+  } else {
+    console.warn('Кнопка collectionGoToGachaButton не найдена!');
+  }
+  
+  // Добавляем обработчики для кнопок в тайкун-режиме
+  const manageTeamButton = document.getElementById('manageTeamButton');
+  if (manageTeamButton) {
+    manageTeamButton.addEventListener('click', function() {
+      console.log('Нажата кнопка manageTeamButton');
+      showTeamManagement();
+    });
+  } else {
+    console.warn('Кнопка manageTeamButton не найдена!');
+  }
+  
+  const upgradeStudioButton = document.getElementById('upgradeStudioButton');
+  if (upgradeStudioButton) {
+    upgradeStudioButton.addEventListener('click', function() {
+      console.log('Нажата кнопка upgradeStudioButton');
+      upgradeStudio();
+    });
+  } else {
+    console.warn('Кнопка upgradeStudioButton не найдена!');
+  }
+  
+  const produceSongButton = document.getElementById('produceSongButton');
+  if (produceSongButton) {
+    produceSongButton.addEventListener('click', function() {
+      console.log('Нажата кнопка produceSongButton');
+      produceSong();
+    });
+  } else {
+    console.warn('Кнопка produceSongButton не найдена!');
+  }
+  
+  const startConcertButton = document.getElementById('startConcertButton');
+  if (startConcertButton) {
+    startConcertButton.addEventListener('click', function() {
+      console.log('Нажата кнопка startConcertButton');
+      startConcert();
+    });
+  } else {
+    console.warn('Кнопка startConcertButton не найдена!');
+  }
+  
+  const collectDailyTasksButton = document.getElementById('collectDailyTasksButton');
+  if (collectDailyTasksButton) {
+    collectDailyTasksButton.addEventListener('click', function() {
+      console.log('Нажата кнопка collectDailyTasksButton');
+      collectDailyTasks();
+    });
+  } else {
+    console.warn('Кнопка collectDailyTasksButton не найдена!');
+  }
+  
+  const shareConcertResultButton = document.getElementById('shareConcertResultButton');
+  if (shareConcertResultButton) {
+    shareConcertResultButton.addEventListener('click', function() {
+      console.log('Нажата кнопка shareConcertResultButton');
+      shareConcertResult();
+    });
+  } else {
+    console.warn('Кнопка shareConcertResultButton не найдена!');
+  }
+  
+  // Удаляем повторные объявления глобальных переменных
 });
 // --- End Event Listener Setup ---
 
